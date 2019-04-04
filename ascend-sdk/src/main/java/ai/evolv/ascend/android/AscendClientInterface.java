@@ -15,6 +15,8 @@ public interface AscendClientInterface {
      */
     <T> T get(String key, T defaultValue);
 
+    void submit(String key, String defaultValue);
+
     /**
      * Emits a generic event to be recorded by Ascend.
      * <p>

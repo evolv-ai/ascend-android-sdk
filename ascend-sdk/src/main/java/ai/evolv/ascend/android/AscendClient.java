@@ -5,6 +5,8 @@ import android.support.annotation.NonNull;
 import ai.evolv.ascend.android.exceptions.AscendAllocationException;
 import com.google.gson.JsonArray;
 
+import java.util.concurrent.Future;
+
 import ai.evolv.ascend.android.generics.GenericClass;
 import timber.log.Timber;
 
@@ -12,18 +14,16 @@ public class AscendClient implements AscendClientInterface {
 
     private final EventEmitter eventEmitter;
     private final AscendAllocationStore store;
-    private final Boolean clientInitialized;
+    private final Future<JsonArray> futureAllocations;
 
     private AscendClient(AscendConfig config, EventEmitter emitter,
-                         Boolean clientInitialized) {
+                         Future<JsonArray> allocations) {
         this.eventEmitter = emitter;
         this.store = config.getAscendAllocationStore();
-        this.clientInitialized = clientInitialized;
+        this.futureAllocations = allocations;
     }
 
     public static synchronized AscendClient init(@NonNull AscendConfig config) {
-        boolean clientInitialized = false;
-
         if (BuildConfig.DEBUG) {
             Timber.uprootAll();
             Timber.plant(new Timber.DebugTree());
@@ -42,33 +42,29 @@ public class AscendClient implements AscendClientInterface {
         AscendAllocationStore store = config.getAscendAllocationStore();
         Allocator allocator = new Allocator(config);
 
-        try {
-            JsonArray allocations = store.get();
-            if (allocations != null && allocations.size() > 0) {
-                String storedUserId = allocations.get(0).getAsJsonObject().get("uid").getAsString();
-                config.getAscendParticipant().setUserId(storedUserId);
-                // TODO negotiate allocations here
-            } else {
-                allocations = allocator.fetchAllocations();
-            }
-            store.put(allocations);
-            clientInitialized = true;
-        } catch (AscendAllocationException e) {
-            Timber.e("There was an error fetching allocations, returning defaults from now on.");
-            Timber.e(e);
+        JsonArray previousAllocations = store.get();
+        if (Allocator.allocationsNotEmpty(previousAllocations)) {
+            String storedUserId = previousAllocations.get(0).getAsJsonObject().get("uid").getAsString();
+            config.getAscendParticipant().setUserId(storedUserId);
         }
 
-        return new AscendClient(config, new EventEmitter(config), clientInitialized);
+        Future<JsonArray> fetchedAllocations = allocator.fetchAllocations();
+
+        return new AscendClient(config, new EventEmitter(config), fetchedAllocations);
     }
 
     @Override
     public <T> T get(String key, T defaultValue) {
-        if (!clientInitialized) {
-            Timber.e("Returning default because the client has not been properly initialized.");
-            return defaultValue;
-        }
         try {
-            JsonArray allocations = store.get();
+            if (futureAllocations == null) {
+                return defaultValue;
+            }
+
+            JsonArray allocations = futureAllocations.get();
+            if (!Allocator.allocationsNotEmpty(allocations)) {
+                return defaultValue;
+            }
+
             GenericClass<T> cls = new GenericClass(defaultValue.getClass());
             return new Allocations(allocations).getValueFromGenome(key, cls.getMyType());
         } catch (Exception e) {
@@ -79,27 +75,31 @@ public class AscendClient implements AscendClientInterface {
     }
 
     @Override
-    public void emitEvent(String key, Double score) {
-        if (!clientInitialized) {
-            Timber.w("Client hasn't been properly initialized.");
-        }
+    public void submit(String key, String defaultValue) {
 
+    }
+
+    @Override
+    public void emitEvent(String key, Double score) {
         this.eventEmitter.emit(key, score);
     }
 
     @Override
     public void emitEvent(String key) {
-        if (!clientInitialized) {
-            Timber.w("Client hasn't been properly initialized.");
-        }
-
         this.eventEmitter.emit(key);
     }
 
     @Override
     public void confirm() {
-        if (!clientInitialized) {
-            Timber.e("No confirm event sent as the client was not properly initialized.");
+        try {
+
+        } catch E
+        if (futureAllocations == null) {
+            return;
+        }
+
+        JsonArray allocations = futureAllocations.get();
+        if (!Allocator.allocationsNotEmpty(allocations)) {
             return;
         }
 
