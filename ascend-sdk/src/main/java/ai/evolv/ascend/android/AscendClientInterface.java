@@ -6,7 +6,8 @@ public interface AscendClientInterface {
      * Retrieves a value from the participant's allocation, returns a default upon error.
      * <p>
      *     Given a unique key this method will retrieve the key's associated value. A default value
-     *     can also be specified in case any errors occur during the values retrieval.
+     *     can also be specified in case any errors occur during the values retrieval. If the allocation
+     *     call times out or fails the default value is always returned.
      * </p>
      * @param key a unique key identifying a specific value in the participants allocation
      * @param defaultValue a default value to return upon error
@@ -37,8 +38,8 @@ public interface AscendClientInterface {
     /**
      * Sends a confirmed event to Ascend.
      * <p>
-     *     Method produces a confirmed event which confirms the participant's allocation. Method
-     *     will sandbag the confirmation call until the participant's allocation is available.
+     *     Method produces a confirmed event which confirms the participant's allocation. Method will not do anything
+     *     in the event that the allocation timed out or failed.
      * </p>
      */
     void confirm();
@@ -47,8 +48,7 @@ public interface AscendClientInterface {
      * Sends a contamination event to Ascend.
      * <p>
      *     Method produces a contamination event which will contaminate the participant's
-     *     allocation. Method will sandbag the contamination call until the participant's
-     *     allocation is available.
+     *     allocation. Method will not do anything in the event that the allocation timed out or failed.
      * </p>
      */
     void contaminate();

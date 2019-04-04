@@ -1,6 +1,5 @@
 package ai.evolv.ascend.android;
 
-import android.renderscript.Allocation;
 import android.support.annotation.NonNull;
 
 public class AscendConfig {
@@ -109,7 +108,7 @@ public class AscendConfig {
         }
 
         /**
-         * Sets up a custom AscendAllocationStore.
+         * Sets up a custom AscendAllocationStore. Store needs to implement the AscendAllocationStore interface.
          * @param ascendAllocationStore a custom built allocation store
          * @return AscendClientBuilder class
          */
@@ -128,11 +127,22 @@ public class AscendConfig {
             return this;
         }
 
+        /**
+         * Sets a custom timeout (in milliseconds) for the Allocation call. If the allocation call takes longer
+         * than this timeout, the default values are used and the confirmation and contamination events get squashed.
+         * @param timeout
+         * @return
+         */
         public Builder setTimeout(long timeout) {
             this.timeout = timeout;
             return this;
         }
 
+        /**
+         * Tells the SDK to use either http or https.
+         * @param scheme
+         * @return
+         */
         public Builder setHttpScheme(String scheme) {
             this.httpScheme = scheme;
             return this;
