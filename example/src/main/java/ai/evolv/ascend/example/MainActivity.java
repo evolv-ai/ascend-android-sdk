@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         // retrieve value from the allocation
         String layoutOption = client.get("ui.layout", "option_1");
 
-        // set you view based upon the retrieved value
+        // set your view based upon the retrieved value
         switch (layoutOption) {
             case "option_1":
                 setContentView(R.layout.layout_one);

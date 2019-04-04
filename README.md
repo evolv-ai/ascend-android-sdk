@@ -2,8 +2,8 @@
 
 #### Vocabulary
 
-   **Participant:** The end user of the application, the individual who's actions are being recorded in the experiment. 
-   **Allocation:** The set of configurations that have been give to the participant, the values that are being
+   **Participant:** The end user of the application, the individual who's actions are being recorded in the experiment.
+   **Allocation:** The set of configurations that have been given to the participant, the values that are being
    experimented against.
 
 For a complete example of how to use this SDK see our [example app](https://github.com/evolv-ai/ascend-android-sdk/blob/master/example/src/main/java/ai/evolv/ascend/example/MainActivity.java).
@@ -59,8 +59,7 @@ thats important to record is a "conversion" event. If you implemented the SDK in
     
 ### Contaminate the Allocation (optional)
 
-Sometimes it may be necessary to contaminate the participant's allocation. Meaning, that you may not want that
-participant's session to be recorded into the experiment.
+Sometimes it may be necessary to contaminate the participant's allocation. Meaning, that you may not want that participant's session to be recorded into the experiment.
 
 1. Contaminate the participant's allocation.
     ```java
@@ -69,8 +68,7 @@ participant's session to be recorded into the experiment.
     
 ### Custom Allocation Store (optional)
 
-Once a participant has been allocated into an experiment you may want to retain the allocations they received. To
-do this create a custom allocation store by implementing the AscendAllocationStore interface. You can supply the
+Once a participant has been allocated into an experiment you may want to retain the allocations they received. To do this, create a custom allocation store by implementing the AscendAllocationStore interface. You can supply the
 custom allocation store to the client when you build the AscendConfig.
 
 1. Supply the allocation store to the client.
