@@ -21,7 +21,6 @@ public class AscendClient implements AscendClientInterface {
         this.clientInitialized = clientInitialized;
     }
 
-    @SuppressWarnings("unused")
     public static synchronized AscendClient init(@NonNull AscendConfig config) {
         boolean clientInitialized = false;
 

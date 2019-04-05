@@ -19,17 +19,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // initialize custom allocation store with allocation (very basic example)
         String myStoredAllocation = "[{\"uid\":\"sandbox_user\",\"eid\":\"experiment_1\",\"cid\":\"candidate_3\",\"genome\":{\"ui\":{\"layout\":\"option_2\",\"buttons\":{\"checkout\":{\"text\":\"Begin Secure Checkout\",\"color\":\"#f3b36d\"},\"info\":{\"text\":\"Product Specifications\",\"color\":\"#f3b36d\"}}},\"search\":{\"weighting\":3.5}},\"excluded\":false}]";
         AscendAllocationStore store = new CustomAllocationStore(myStoredAllocation);
 
+        // build config with custom timeout and custom allocation store
+        // set client to use sandbox environment
         AscendConfig config = new AscendConfig.Builder("sandbox")
                 .setTimeout(5000)
                 .setAscendAllocationStore(store)
                 .build();
+
+        // initialize the client
         client = AscendClient.init(config);
 
+        // confirm the participant into the experiment
+        client.confirm();
+
+        // retrieve value from the allocation
         String layoutOption = client.get("ui.layout", "option_1");
 
+        // set your view based upon the retrieved value
         switch (layoutOption) {
             case "option_1":
                 setContentView(R.layout.layout_one);
@@ -42,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
 
+        // retrieve more values
         String checkoutButtonText = client.get("ui.buttons.checkout.text",
                 "Buy Now");
         String checkoutButtonColor = client.get("ui.buttons.checkout.color",
@@ -51,14 +62,14 @@ public class MainActivity extends AppCompatActivity {
         String infoButtonColor = client.get("ui.buttons.info.color",
                 "#2f5e5d");
 
+        // set buttons to the specified values
         setButton(R.id.checkoutButton, checkoutButtonText, checkoutButtonColor);
         setButton(R.id.infoButton, infoButtonText, infoButtonColor);
-
-        client.confirm();
     }
 
     public void pressCheckout(View view) {
-        client.emitEvent("convert");
+        // emit a conversion event upon checkout
+        client.emitEvent("conversion");
         Toast convMessage = Toast.makeText(this, "Conversion!",
                 Toast.LENGTH_SHORT);
         convMessage.show();

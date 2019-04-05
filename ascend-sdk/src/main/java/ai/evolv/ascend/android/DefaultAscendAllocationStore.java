@@ -12,7 +12,7 @@ public class DefaultAscendAllocationStore implements AscendAllocationStore {
 
     @Override
     public JsonArray get() {
-        return this.allocations;
+        return allocations;
     }
 
     @Override

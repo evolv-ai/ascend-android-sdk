@@ -6,6 +6,10 @@ import com.google.gson.JsonParser;
 import ai.evolv.ascend.android.AscendAllocationStore;
 
 public class CustomAllocationStore implements AscendAllocationStore {
+    /*
+     A custom in memory allocation store, this is a very basic example. One would likely use
+     sqlLite or an application storage implementation instead.
+     */
 
     private JsonArray allocations;
 
