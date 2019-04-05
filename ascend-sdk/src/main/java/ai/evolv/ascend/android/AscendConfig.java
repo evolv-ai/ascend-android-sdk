@@ -19,6 +19,7 @@ public class AscendConfig {
     private final AscendAllocationStore ascendAllocationStore;
     private final AscendParticipant ascendParticipant;
     private final HttpParticipantClient participantClient;
+    private final ExecutionQueue executionQueue;
 
     private AscendConfig(String httpScheme, String domain, String version, String environmentId,
                          long timeout, AscendAllocationStore ascendAllocationStore, AscendParticipant ascendParticipant) {
@@ -30,6 +31,7 @@ public class AscendConfig {
         this.ascendAllocationStore = ascendAllocationStore;
         this.ascendParticipant = ascendParticipant;
         this.participantClient = new HttpParticipantClient();
+        this.executionQueue = new ExecutionQueue();
     }
 
     String getHttpScheme() {
@@ -62,6 +64,10 @@ public class AscendConfig {
 
     HttpParticipantClient getParticipantClient() {
         return this.participantClient;
+    }
+
+    ExecutionQueue getExecutionQueue() {
+        return this.executionQueue;
     }
 
     public static class Builder {

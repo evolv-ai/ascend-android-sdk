@@ -2,25 +2,29 @@ package ai.evolv.ascend.android;
 
 import android.support.annotation.NonNull;
 
-import ai.evolv.ascend.android.exceptions.AscendAllocationException;
 import com.google.gson.JsonArray;
 
 import java.util.concurrent.Future;
 
+import ai.evolv.ascend.android.exceptions.AscendKeyError;
 import ai.evolv.ascend.android.generics.GenericClass;
 import timber.log.Timber;
 
 public class AscendClient implements AscendClientInterface {
 
     private final EventEmitter eventEmitter;
-    private final AscendAllocationStore store;
     private final Future<JsonArray> futureAllocations;
+    private final ExecutionQueue executionQueue;
+    private final Allocator allocator;
+    private final AscendAllocationStore store;
 
     private AscendClient(AscendConfig config, EventEmitter emitter,
-                         Future<JsonArray> allocations) {
-        this.eventEmitter = emitter;
+                         Future<JsonArray> allocations, Allocator allocator) {
         this.store = config.getAscendAllocationStore();
+        this.executionQueue = config.getExecutionQueue();
+        this.eventEmitter = emitter;
         this.futureAllocations = allocations;
+        this.allocator = allocator;
     }
 
     public static synchronized AscendClient init(@NonNull AscendConfig config) {
@@ -48,9 +52,10 @@ public class AscendClient implements AscendClientInterface {
             config.getAscendParticipant().setUserId(storedUserId);
         }
 
+        // fetch and reconcile allocations asynchronously
         Future<JsonArray> fetchedAllocations = allocator.fetchAllocations();
 
-        return new AscendClient(config, new EventEmitter(config), fetchedAllocations);
+        return new AscendClient(config, new EventEmitter(config), fetchedAllocations, allocator);
     }
 
     @Override
@@ -60,6 +65,7 @@ public class AscendClient implements AscendClientInterface {
                 return defaultValue;
             }
 
+            // this is blocking
             JsonArray allocations = futureAllocations.get();
             if (!Allocator.allocationsNotEmpty(allocations)) {
                 return defaultValue;
@@ -75,8 +81,23 @@ public class AscendClient implements AscendClientInterface {
     }
 
     @Override
-    public void submit(String key, String defaultValue) {
-
+    public <T> void submit(String key, T defaultValue, AscendAction<T> function) {
+        Allocator.AllocationStatus allocationStatus = allocator.getAllocationStatus();
+        Execution execution = new Execution(key, defaultValue, function);
+        if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
+            executionQueue.enqueue(execution);
+            return;
+        } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED){
+            try {
+                JsonArray allocations = store.get();
+                execution.executeWithAllocation(allocations);
+                return;
+            } catch (AscendKeyError e) {
+                Timber.w("There was an error retrieving the value of %s from the allocation.",
+                        execution.getKey());
+            }
+        }
+        execution.executeWithDefault();
     }
 
     @Override
@@ -91,30 +112,21 @@ public class AscendClient implements AscendClientInterface {
 
     @Override
     public void confirm() {
-        try {
-
-        } catch E
-        if (futureAllocations == null) {
-            return;
+        Allocator.AllocationStatus allocationStatus = allocator.getAllocationStatus();
+        if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
+            allocator.sandBagConfirmation();
+        } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED){
+            eventEmitter.confirm(store.get());
         }
-
-        JsonArray allocations = futureAllocations.get();
-        if (!Allocator.allocationsNotEmpty(allocations)) {
-            return;
-        }
-
-        JsonArray allocations = store.get();
-        this.eventEmitter.confirm(allocations);
     }
 
     @Override
     public void contaminate() {
-        if (!clientInitialized) {
-            Timber.e("No contaminate event sent as the client was not properly initialized.");
-            return;
+        Allocator.AllocationStatus allocationStatus = allocator.getAllocationStatus();
+        if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
+            allocator.sandBagContamination();
+        } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED){
+            eventEmitter.contaminate(store.get());
         }
-
-        JsonArray allocations = store.get();
-        this.eventEmitter.contaminate(allocations);
     }
 }

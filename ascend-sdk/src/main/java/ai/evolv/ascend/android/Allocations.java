@@ -5,6 +5,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -48,5 +50,36 @@ class Allocations {
         JsonObject genomeWrapped = new JsonObject();
         genomeWrapped.add("genome", genome);
         return genomeWrapped;
+    }
+
+    static JsonArray reconcileAllocations(JsonArray previousAllocations, @NotNull JsonArray currentAllocations) {
+        /*
+         * Check the current allocations for any allocations that belong to experiments in the previous
+         * allocations. If there are, keep the previous allocations. If there are any live experiments
+         * that are not in the previous allocations add the new allocation to the allocations list.
+         */
+        JsonArray allocations = new JsonArray();
+
+        for (JsonElement ca : currentAllocations) {
+            JsonObject currentAllocation = ca.getAsJsonObject();
+            String currentEid = currentAllocation.get("eid").toString();
+            boolean previousFound = false;
+
+            for (JsonElement pa : previousAllocations) {
+                JsonObject previousAllocation = pa.getAsJsonObject();
+                String previousEid = previousAllocation.get("eid").toString();
+
+                if (previousEid.equals(currentEid)) {
+                    allocations.add(pa.getAsJsonObject());
+                    previousFound = true;
+                }
+            }
+
+            if (!previousFound) {
+                allocations.add(ca.getAsJsonObject());
+            }
+        }
+
+        return allocations;
     }
 }

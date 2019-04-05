@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import ai.evolv.ascend.android.exceptions.AscendAllocationException;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -22,14 +23,41 @@ import timber.log.Timber;
 
 class Allocator {
 
+    enum AllocationStatus {
+        FETCHING, RETRIEVED, FAILED
+    }
+
+    private final ExecutionQueue executionQueue;
     private final AscendAllocationStore store;
     private final AscendConfig config;
     private final AscendParticipant ascendParticipant;
+    private final EventEmitter eventEmitter;
+
+    private boolean confirmationSandbagged;
+    private boolean contaminationSandbagged;
+    private AllocationStatus allocationStatus;
 
     Allocator(@NonNull AscendConfig config) {
+        this.executionQueue = config.getExecutionQueue();
         this.store = config.getAscendAllocationStore();
         this.config = config;
         this.ascendParticipant = config.getAscendParticipant();
+        this.confirmationSandbagged = false;
+        this.contaminationSandbagged = false;
+        this.allocationStatus = AllocationStatus.FETCHING;
+        this.eventEmitter = new EventEmitter(config);
+    }
+
+    AllocationStatus getAllocationStatus() {
+        return allocationStatus;
+    }
+
+    void sandBagConfirmation() {
+        confirmationSandbagged = true;
+    }
+
+    void sandBagContamination() {
+        contaminationSandbagged = true;
     }
 
     HttpUrl createAllocationsUrl() {
@@ -46,7 +74,7 @@ class Allocator {
 
     Future<JsonArray> fetchAllocations() {
         OkHttpClient client = new OkHttpClient.Builder()
-                .callTimeout(5000, TimeUnit.MILLISECONDS)
+                .callTimeout(config.getTimeout(), TimeUnit.MILLISECONDS)
                 .build();
 
         final Request request = new Request.Builder()
@@ -62,32 +90,52 @@ class Allocator {
 
             @Override public void onResponse(Call call, Response response) {
                 String body = "";
+                JsonArray allocations = new JsonArray();
                 try {
-                    ResponseBody responseBody = response.body();
-                    if (responseBody != null) {
-                        body = responseBody.string();
-                    }
-                    if (!response.isSuccessful()) {
-                        throw new IOException("Unexpected response when making GET request: " + response + " using url: "
-                                + request.url() + " with body: " + body);
+                    try {
+                        ResponseBody responseBody = response.body();
+                        if (responseBody != null) {
+                            body = responseBody.string();
+                        }
+                        if (!response.isSuccessful()) {
+                            throw new IOException("Unexpected response when making GET request: " + response + " using url: "
+                                    + request.url() + " with body: " + body);
+                        }
+
+                        JsonParser parser = new JsonParser();
+                        allocations = parser.parse(body).getAsJsonArray();
+
+                        JsonArray previousAllocations = store.get();
+                        if (allocationsNotEmpty(previousAllocations)) {
+                            allocations = Allocations.reconcileAllocations(previousAllocations, allocations);
+                        }
+                    } catch(Exception e ) {
+                        throw new AscendAllocationException(e.getMessage());
                     }
 
-                    JsonParser parser = new JsonParser();
-                    JsonArray allocations = parser.parse(body).getAsJsonArray();
-
-                    JsonArray previousAllocations = store.get();
-                    if (allocationsNotEmpty(previousAllocations)) {
-                        allocations = reconcileAllocations(previousAllocations, allocations);
-                    }
-
+                    store.put(allocations);
                     responseFuture.set(allocations);
-                } catch (Exception e) {
+                    allocationStatus = AllocationStatus.RETRIEVED;
+
+                    if (confirmationSandbagged) {
+                        eventEmitter.confirm(allocations);
+                    }
+                    if (contaminationSandbagged) {
+                        eventEmitter.contaminate(allocations);
+                    }
+
+                    // could throw an exception due to customer's action logic
+                    // always surface any customer implementation errors
+                    executionQueue.executeAllWithValuesFromAllocations(allocations);
+
+                } catch (AscendAllocationException e) {
                     resolveAllocationFailure(responseFuture);
+                    Timber.w(e);
+                } catch (Exception e) {
+                    allocationStatus = AllocationStatus.FAILED;
                     Timber.e(e);
                 } finally {
-                    if (response != null) {
-                        response.close();
-                    }
+                    response.close();
                 }
             }
 
@@ -103,17 +151,26 @@ class Allocator {
         JsonArray allocations = store.get();
         if (allocationsNotEmpty(allocations)) {
             Timber.w("Falling back to participant's previous allocation.");
-            //execute stored callbacks with the previous allocation
+
             future.set(allocations);
+
+            if (confirmationSandbagged) {
+                eventEmitter.confirm(allocations);
+            }
+            if (contaminationSandbagged) {
+                eventEmitter.contaminate(allocations);
+            }
+
+            allocationStatus = AllocationStatus.RETRIEVED;
+            executionQueue.executeAllWithValuesFromAllocations(allocations);
         } else {
             Timber.w("Falling back to the supplied defaults.");
-            //execute stored callbacks with the default values
-            future.set(new JsonArray());
-        }
-    }
 
-    private JsonArray reconcileAllocations(JsonArray previousAllocations, JsonArray currentAllocations) {
-        return null;
+            future.set(new JsonArray());
+
+            allocationStatus = AllocationStatus.FAILED;
+            executionQueue.executeAllWithValuesFromDefaults();
+        }
     }
 
     static boolean allocationsNotEmpty(JsonArray allocations) {

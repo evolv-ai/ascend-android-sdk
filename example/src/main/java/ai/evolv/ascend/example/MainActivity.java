@@ -10,6 +10,7 @@ import android.widget.Toast;
 import ai.evolv.ascend.android.AscendAllocationStore;
 import ai.evolv.ascend.android.AscendClient;
 import ai.evolv.ascend.android.AscendConfig;
+import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,56 +20,47 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // initialize custom allocation store with allocation (very basic example)
-        String myStoredAllocation = "[{\"uid\":\"sandbox_user\",\"eid\":\"experiment_1\",\"cid\":\"candidate_3\",\"genome\":{\"ui\":{\"layout\":\"option_2\",\"buttons\":{\"checkout\":{\"text\":\"Begin Secure Checkout\",\"color\":\"#f3b36d\"},\"info\":{\"text\":\"Product Specifications\",\"color\":\"#f3b36d\"}}},\"search\":{\"weighting\":3.5}},\"excluded\":false}]";
+        String myStoredAllocation = "[{\"uid\":\"sandbox_user\",\"eid\":\"experiment_2\",\"cid\":\"candidate_3\",\"genome\":{\"ui\":{\"layout\":\"option_2\",\"buttons\":{\"checkout\":{\"text\":\"Begin Secure Checkout\",\"color\":\"#f3b36d\"},\"info\":{\"text\":\"Product Specifications\",\"color\":\"#f3b36d\"}}},\"search\":{\"weighting\":3.5}},\"excluded\":false}]";
         AscendAllocationStore store = new CustomAllocationStore(myStoredAllocation);
 
         // build config with custom timeout and custom allocation store
         // set client to use sandbox environment
         AscendConfig config = new AscendConfig.Builder("sandbox")
-                .setTimeout(5000)
-                .setAscendAllocationStore(store)
+                .setTimeout(10)
+//                .setAscendAllocationStore(store)
                 .build();
 
         // initialize the client
         client = AscendClient.init(config);
 
-        // confirm the participant into the experiment
+        client.submit("ui.layout", "option_1", layoutOption -> {
+            runOnUiThread(() -> {
+                switch (layoutOption) {
+                    case "option_1":
+                        setContentView(R.layout.layout_one);
+                        break;
+                    case "option_2":
+                        setContentView(R.layout.layout_two);
+                        break;
+                    default:
+                        setContentView(R.layout.layout_one);
+                        break;
+                }
+            });
+        });
+
+        client.submit("ui.buttons.checkout.text", "Test Message", checkoutButtonText -> {
+            runOnUiThread(() -> {
+                TextView showCountTextView = findViewById(R.id.checkoutButton);
+                showCountTextView.setText(checkoutButtonText);
+            });
+        });
+
+
         client.confirm();
-
-        // retrieve value from the allocation
-        String layoutOption = client.get("ui.layout", "option_1");
-
-        // set your view based upon the retrieved value
-        switch (layoutOption) {
-            case "option_1":
-                setContentView(R.layout.layout_one);
-                break;
-            case "option_2":
-                setContentView(R.layout.layout_two);
-                break;
-            default:
-                setContentView(R.layout.layout_one);
-                break;
-        }
-
-        // retrieve more values
-        String checkoutButtonText = client.get("ui.buttons.checkout.text",
-                "Buy Now");
-        String checkoutButtonColor = client.get("ui.buttons.checkout.color",
-                "#2f5e5d");
-        String infoButtonText = client.get("ui.buttons.info.text",
-                "Product Info");
-        String infoButtonColor = client.get("ui.buttons.info.color",
-                "#2f5e5d");
-
-        // set buttons to the specified values
-        setButton(R.id.checkoutButton, checkoutButtonText, checkoutButtonColor);
-        setButton(R.id.infoButton, infoButtonText, infoButtonColor);
     }
 
     public void pressCheckout(View view) {
-        // emit a conversion event upon checkout
         client.emitEvent("conversion");
         Toast convMessage = Toast.makeText(this, "Conversion!",
                 Toast.LENGTH_SHORT);
