@@ -136,8 +136,8 @@ public class AscendConfig {
         /**
          * Sets a custom timeout (in milliseconds) for the Allocation call. If the allocation call takes longer
          * than this timeout, the default values are used and the confirmation and contamination events get squashed.
-         * @param timeout
-         * @return
+         * @param timeout number of milliseconds to wait for an allocation to occur
+         * @return AscendClientBuilder class
          */
         public Builder setTimeout(long timeout) {
             this.timeout = timeout;
@@ -146,8 +146,8 @@ public class AscendConfig {
 
         /**
          * Tells the SDK to use either http or https.
-         * @param scheme
-         * @return
+         * @param scheme either http or https
+         * @return AscendClientBuilder class
          */
         public Builder setHttpScheme(String scheme) {
             this.httpScheme = scheme;

@@ -86,7 +86,7 @@ public class AscendClient implements AscendClientInterface {
     }
 
     @Override
-    public <T> void submit(String key, T defaultValue, AscendAction<T> function) {
+    public <T> void subscribe(String key, T defaultValue, AscendAction<T> function) {
         Execution execution = new Execution(key, defaultValue, function);
         if (previousAllocations) {
             try {

@@ -10,7 +10,6 @@ import android.widget.Toast;
 import ai.evolv.ascend.android.AscendAllocationStore;
 import ai.evolv.ascend.android.AscendClient;
 import ai.evolv.ascend.android.AscendConfig;
-import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         // initialize the client
         client = AscendClient.init(config);
 
-        client.submit("ui.layout", "option_1", layoutOption -> {
+        client.subscribe("ui.layout", "option_1", layoutOption -> {
             runOnUiThread(() -> {
                 switch (layoutOption) {
                     case "option_1":
@@ -49,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
-        client.submit("ui.buttons.checkout.text", "Test Message", checkoutButtonText -> {
+        client.subscribe("ui.buttons.checkout.text", "Test Message", checkoutButtonText -> {
             runOnUiThread(() -> {
                 TextView showCountTextView = findViewById(R.id.checkoutButton);
                 showCountTextView.setText(checkoutButtonText);

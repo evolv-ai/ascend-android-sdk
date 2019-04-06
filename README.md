@@ -37,7 +37,26 @@ For a complete example of how to use this SDK see our [example app](https://gith
     ```
     
    *Note: The return value's type is decided by the provided default value's type. If there is an issue retrieving the
-   requested value, the default value will be returned in its place.*
+   requested value, the default value will be returned in its place. This method is blocking, it will wait until the
+   allocation has been received.*
+   
+### Value Subscription
+
+You may want to use a value from your allocation without blocking the execution of your application. If this is true, you can
+subscribe to a value and apply any actions as a result of it asynchronously.
+
+1. Subscribe to a value from Ascend.
+    ```java
+        client.subscribe(<key_for_value>, <default_value>, value -> {
+            Your code...
+        });
+    ```
+    
+    *Note: The return value's type is decided by the provided default value's type. If there is an issue retrieving the
+    requested value, the default value will be returned in its place. If you have a previous allocation stored the 
+    value will be retrieved and then your code will be executed. When the new allocation is retrieved if the value
+    differs from the previously stored allocation then your code will be ran again with the new value. If your code 
+    results in an Exception it will be thrown.*
     
 ### Custom Events (optional)
 

@@ -4,8 +4,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.HttpUrl;
@@ -49,9 +47,7 @@ class HttpParticipantClient {
                     Timber.e(e);
                     responseFuture.setException(e);
                 } finally {
-                    if (response != null) {
-                        response.close();
-                    }
+                    response.close();
                 }
             }
 

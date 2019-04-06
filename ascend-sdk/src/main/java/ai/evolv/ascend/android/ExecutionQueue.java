@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import ai.evolv.ascend.android.exceptions.AscendKeyError;
 import timber.log.Timber;
 
-public class ExecutionQueue {
+class ExecutionQueue {
 
     private final LinkedList<Execution> queue;
 

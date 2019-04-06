@@ -7,7 +7,6 @@ import java.util.Set;
 
 import ai.evolv.ascend.android.exceptions.AscendKeyError;
 import ai.evolv.ascend.android.generics.GenericClass;
-import timber.log.Timber;
 
 class Execution<T> {
 
@@ -34,7 +33,7 @@ class Execution<T> {
 
         Set<String> activeExperiments = allocations.getActiveExperiments();
         if (alreadyExecuted.isEmpty() || !alreadyExecuted.equals(activeExperiments)) {
-            // there was a change after reconciliation, apply changes
+            // there was a change to the allocations after reconciliation, apply changes
             function.apply(value);
         }
 
