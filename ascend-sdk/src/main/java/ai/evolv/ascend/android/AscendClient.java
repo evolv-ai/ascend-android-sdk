@@ -17,17 +17,20 @@ public class AscendClient implements AscendClientInterface {
     private final ExecutionQueue executionQueue;
     private final Allocator allocator;
     private final AscendAllocationStore store;
+    private final boolean previousAllocations;
 
     private AscendClient(AscendConfig config, EventEmitter emitter,
-                         Future<JsonArray> allocations, Allocator allocator) {
+                         Future<JsonArray> allocations, Allocator allocator,
+                         boolean previousAllocations) {
         this.store = config.getAscendAllocationStore();
         this.executionQueue = config.getExecutionQueue();
         this.eventEmitter = emitter;
         this.futureAllocations = allocations;
         this.allocator = allocator;
+        this.previousAllocations = previousAllocations;
     }
 
-    public static synchronized AscendClient init(@NonNull AscendConfig config) {
+    public static AscendClient init(@NonNull AscendConfig config) {
         if (BuildConfig.DEBUG) {
             Timber.uprootAll();
             Timber.plant(new Timber.DebugTree());
@@ -47,15 +50,17 @@ public class AscendClient implements AscendClientInterface {
         Allocator allocator = new Allocator(config);
 
         JsonArray previousAllocations = store.get();
+        boolean reconciliationNeeded = false;
         if (Allocator.allocationsNotEmpty(previousAllocations)) {
             String storedUserId = previousAllocations.get(0).getAsJsonObject().get("uid").getAsString();
             config.getAscendParticipant().setUserId(storedUserId);
+            reconciliationNeeded = true;
         }
 
         // fetch and reconcile allocations asynchronously
         Future<JsonArray> fetchedAllocations = allocator.fetchAllocations();
 
-        return new AscendClient(config, new EventEmitter(config), fetchedAllocations, allocator);
+        return new AscendClient(config, new EventEmitter(config), fetchedAllocations, allocator, reconciliationNeeded);
     }
 
     @Override
@@ -82,8 +87,18 @@ public class AscendClient implements AscendClientInterface {
 
     @Override
     public <T> void submit(String key, T defaultValue, AscendAction<T> function) {
-        Allocator.AllocationStatus allocationStatus = allocator.getAllocationStatus();
         Execution execution = new Execution(key, defaultValue, function);
+        if (previousAllocations) {
+            try {
+                JsonArray allocations = store.get();
+                execution.executeWithAllocation(allocations);
+            } catch (AscendKeyError e) {
+                Timber.w("There was an error retrieving the value of %s from the allocation.",
+                        execution.getKey());
+            }
+        }
+
+        Allocator.AllocationStatus allocationStatus = allocator.getAllocationStatus();
         if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
             executionQueue.enqueue(execution);
             return;

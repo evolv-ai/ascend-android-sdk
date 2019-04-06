@@ -75,6 +75,7 @@ class Allocator {
     Future<JsonArray> fetchAllocations() {
         OkHttpClient client = new OkHttpClient.Builder()
                 .callTimeout(config.getTimeout(), TimeUnit.MILLISECONDS)
+                .retryOnConnectionFailure(false)
                 .build();
 
         final Request request = new Request.Builder()

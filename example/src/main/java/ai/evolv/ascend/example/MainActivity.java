@@ -26,8 +26,8 @@ public class MainActivity extends AppCompatActivity {
         // build config with custom timeout and custom allocation store
         // set client to use sandbox environment
         AscendConfig config = new AscendConfig.Builder("sandbox")
-                .setTimeout(10)
-//                .setAscendAllocationStore(store)
+                .setTimeout(1000)
+                .setAscendAllocationStore(store)
                 .build();
 
         // initialize the client

@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -81,5 +82,14 @@ class Allocations {
         }
 
         return allocations;
+    }
+
+    Set<String> getActiveExperiments() {
+        Set<String> activeExperiments = new HashSet<>();
+        for (JsonElement a : allocations) {
+            JsonObject allocation = a.getAsJsonObject();
+            activeExperiments.add(allocation.get("eid").getAsString());
+        }
+        return activeExperiments;
     }
 }
