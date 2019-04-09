@@ -104,6 +104,18 @@ custom allocation store to the client when you build the AscendConfig.
 There are several optional configurations available through the AscendConfig builder, check out the AscendConfig
 documentation to see what options are available.
 
+### Get the .jar
+
+This SDK can also be used in your Java application. To retrieve the .jar:
+
+1. Run the "createJar" gradle command in the top level directory.
+    ```
+    ./gradlew createJar
+    ```
+    
+2. Retrieve the jar from ascend-sdk/build/outputs/ascend-sdk.jar and place it in your
+   project.
+
 ### About Evolv and the Ascend Product
 
 Evolv Delivers Autonomous Optimization Across Web & Mobile.
