@@ -1,10 +1,11 @@
 package ai.evolv.ascend.android;
 
-import android.support.annotation.NonNull;
-
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.Future;
@@ -18,10 +19,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import timber.log.Timber;
 
 
 class Allocator {
+
+    private static Logger logger = LoggerFactory.getLogger(Allocator.class);
 
     enum AllocationStatus {
         FETCHING, RETRIEVED, FAILED
@@ -33,17 +35,16 @@ class Allocator {
     private final AscendParticipant ascendParticipant;
     private final EventEmitter eventEmitter;
 
-    private boolean confirmationSandbagged;
-    private boolean contaminationSandbagged;
+    private boolean confirmationSandbagged = false;
+    private boolean contaminationSandbagged = false;
+
     private AllocationStatus allocationStatus;
 
-    Allocator(@NonNull AscendConfig config) {
+    Allocator(AscendConfig config) {
         this.executionQueue = config.getExecutionQueue();
         this.store = config.getAscendAllocationStore();
         this.config = config;
         this.ascendParticipant = config.getAscendParticipant();
-        this.confirmationSandbagged = false;
-        this.contaminationSandbagged = false;
         this.allocationStatus = AllocationStatus.FETCHING;
         this.eventEmitter = new EventEmitter(config);
     }
@@ -85,11 +86,13 @@ class Allocator {
         final SettableFuture<JsonArray> responseFuture = SettableFuture.create();
 
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) {
+            @Override
+            public void onFailure(Call call, IOException e) {
                 resolveAllocationFailure(responseFuture);
             }
 
-            @Override public void onResponse(Call call, Response response) {
+            @Override
+            public void onResponse(Call call, Response response) {
                 String body = "";
                 JsonArray allocations = new JsonArray();
                 try {
@@ -98,9 +101,11 @@ class Allocator {
                         if (responseBody != null) {
                             body = responseBody.string();
                         }
+
                         if (!response.isSuccessful()) {
-                            throw new IOException("Unexpected response when making GET request: " + response + " using url: "
-                                    + request.url() + " with body: " + body);
+                            throw new IOException(String.format(
+                                    "Unexpected response when making GET request: %s using url: %s with body: %s",
+                                    response, request.url(), body));
                         }
 
                         JsonParser parser = new JsonParser();
@@ -110,7 +115,8 @@ class Allocator {
                         if (allocationsNotEmpty(previousAllocations)) {
                             allocations = Allocations.reconcileAllocations(previousAllocations, allocations);
                         }
-                    } catch(Exception e ) {
+
+                    } catch(Exception e) {
                         throw new AscendAllocationException(e.getMessage());
                     }
 
@@ -121,6 +127,7 @@ class Allocator {
                     if (confirmationSandbagged) {
                         eventEmitter.confirm(allocations);
                     }
+
                     if (contaminationSandbagged) {
                         eventEmitter.contaminate(allocations);
                     }
@@ -128,13 +135,11 @@ class Allocator {
                     // could throw an exception due to customer's action logic
                     // always surface any customer implementation errors
                     executionQueue.executeAllWithValuesFromAllocations(allocations);
-
                 } catch (AscendAllocationException e) {
                     resolveAllocationFailure(responseFuture);
-                    Timber.w(e);
                 } catch (Exception e) {
                     allocationStatus = AllocationStatus.FAILED;
-                    Timber.e(e);
+                    logger.warn("There was an error making an allocation request.",e);
                 } finally {
                     response.close();
                 }
@@ -147,17 +152,18 @@ class Allocator {
     }
 
     private void resolveAllocationFailure(SettableFuture<JsonArray> future) {
-        Timber.w("There was an error while making an allocation request.");
+        logger.warn("There was an error while making an allocation request.");
 
         JsonArray allocations = store.get();
         if (allocationsNotEmpty(allocations)) {
-            Timber.w("Falling back to participant's previous allocation.");
+            logger.warn("Falling back to participant's previous allocation.");
 
             future.set(allocations);
 
             if (confirmationSandbagged) {
                 eventEmitter.confirm(allocations);
             }
+
             if (contaminationSandbagged) {
                 eventEmitter.contaminate(allocations);
             }
@@ -165,7 +171,7 @@ class Allocator {
             allocationStatus = AllocationStatus.RETRIEVED;
             executionQueue.executeAllWithValuesFromAllocations(allocations);
         } else {
-            Timber.w("Falling back to the supplied defaults.");
+            logger.warn("Falling back to the supplied defaults.");
 
             future.set(new JsonArray());
 

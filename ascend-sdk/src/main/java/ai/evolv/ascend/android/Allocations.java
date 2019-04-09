@@ -5,8 +5,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -53,12 +51,20 @@ class Allocations {
         return genomeWrapped;
     }
 
-    static JsonArray reconcileAllocations(JsonArray previousAllocations, @NotNull JsonArray currentAllocations) {
-        /*
-         * Check the current allocations for any allocations that belong to experiments in the previous
-         * allocations. If there are, keep the previous allocations. If there are any live experiments
-         * that are not in the previous allocations add the new allocation to the allocations list.
-         */
+    /**
+     * Reconciles the previous allocations with any new allocations.
+     *
+     * <p>
+     *     Check the current allocations for any allocations that belong to experiments in the previous
+     *     allocations. If there are, keep the previous allocations. If there are any live experiments
+     *     that are not in the previous allocations add the new allocation to the allocations list.
+     * </p>
+     *
+     * @param previousAllocations the stored allocations
+     * @param currentAllocations the allocations recently fetched
+     * @return the reconcile allocations
+     */
+    static JsonArray reconcileAllocations(JsonArray previousAllocations, JsonArray currentAllocations) {
         JsonArray allocations = new JsonArray();
 
         for (JsonElement ca : currentAllocations) {

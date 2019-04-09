@@ -2,17 +2,21 @@ package ai.evolv.ascend.android;
 
 import com.google.gson.JsonArray;
 
-import java.util.LinkedList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import ai.evolv.ascend.android.exceptions.AscendKeyError;
-import timber.log.Timber;
 
 class ExecutionQueue {
 
-    private final LinkedList<Execution> queue;
+    private static Logger logger = LoggerFactory.getLogger(ExecutionQueue.class);
+
+    private final ConcurrentLinkedQueue<Execution> queue;
 
     ExecutionQueue() {
-        this.queue = new LinkedList<>();
+        this.queue = new ConcurrentLinkedQueue<>();
     }
 
     void enqueue(Execution execution) {
@@ -25,7 +29,7 @@ class ExecutionQueue {
             try {
                 execution.executeWithAllocation(allocations);
             } catch (AscendKeyError e) {
-                Timber.w("There was an error retrieving the value of %s from the allocation.",
+                logger.warn("There was an error retrieving the value of %s from the allocation.",
                         execution.getKey());
             }
         }

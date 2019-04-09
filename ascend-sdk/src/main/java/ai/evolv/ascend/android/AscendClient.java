@@ -1,16 +1,18 @@
 package ai.evolv.ascend.android;
 
-import android.support.annotation.NonNull;
-
 import com.google.gson.JsonArray;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 
 import ai.evolv.ascend.android.exceptions.AscendKeyError;
 import ai.evolv.ascend.android.generics.GenericClass;
-import timber.log.Timber;
 
 public class AscendClient implements AscendClientInterface {
+
+    private static Logger logger = LoggerFactory.getLogger(AscendClient.class);
 
     private final EventEmitter eventEmitter;
     private final Future<JsonArray> futureAllocations;
@@ -30,13 +32,8 @@ public class AscendClient implements AscendClientInterface {
         this.previousAllocations = previousAllocations;
     }
 
-    public static AscendClient init(@NonNull AscendConfig config) {
-        if (BuildConfig.DEBUG) {
-            Timber.uprootAll();
-            Timber.plant(new Timber.DebugTree());
-        }
-
-        Timber.i("Initializing Ascend Client." +
+    public static AscendClient init(AscendConfig config) {
+        logger.info("Initializing Ascend Client." +
                         "\nVersion: %s" +
                         "\nAscendParticipant API Endpoint: %s" +
                         "\nAscendParticipant API Version: %s" +
@@ -79,8 +76,7 @@ public class AscendClient implements AscendClientInterface {
             GenericClass<T> cls = new GenericClass(defaultValue.getClass());
             return new Allocations(allocations).getValueFromGenome(key, cls.getMyType());
         } catch (Exception e) {
-            Timber.e("There was as error retrieving the requested value. Returning the default.");
-            Timber.e(e);
+            logger.error("There was as error retrieving the requested value. Returning the default.", e);
             return defaultValue;
         }
     }
@@ -93,7 +89,7 @@ public class AscendClient implements AscendClientInterface {
                 JsonArray allocations = store.get();
                 execution.executeWithAllocation(allocations);
             } catch (AscendKeyError e) {
-                Timber.w("There was an error retrieving the value of %s from the allocation.",
+                logger.warn("There was an error retrieving the value of %s from the allocation.",
                         execution.getKey());
             }
         }
@@ -108,7 +104,7 @@ public class AscendClient implements AscendClientInterface {
                 execution.executeWithAllocation(allocations);
                 return;
             } catch (AscendKeyError e) {
-                Timber.w("There was an error retrieving the value of %s from the allocation.",
+                logger.warn("There was an error retrieving the value of %s from the allocation.",
                         execution.getKey());
             }
         }

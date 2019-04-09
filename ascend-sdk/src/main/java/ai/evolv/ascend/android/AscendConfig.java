@@ -1,7 +1,5 @@
 package ai.evolv.ascend.android;
 
-import android.support.annotation.NonNull;
-
 public class AscendConfig {
 
     static final String DEFAULT_HTTP_SCHEME = "https";
@@ -89,7 +87,7 @@ public class AscendConfig {
          * </p>
          * @param environmentId unique id representing a customer's environment
          */
-        public Builder(@NonNull String environmentId) {
+        public Builder(String environmentId) {
             this.environmentId = environmentId;
         }
 
