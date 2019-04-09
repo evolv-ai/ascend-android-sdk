@@ -1,17 +1,13 @@
-package ai.evolv.ascend.android;
-
-import android.support.test.runner.AndroidJUnit4;
+package ai.evolv;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import ai.evolv.ascend.android.exceptions.AscendKeyError;
+import ai.evolv.exceptions.AscendKeyError;
 
-@RunWith(AndroidJUnit4.class)
 public class AllocationsTest {
 
     private static final String rawAllocation = "[{\"uid\":\"test_uid\",\"sid\":\"test_sid\",\"eid\":\"test_eid\",\"cid\":\"test_cid\",\"genome\":{\"search\":{\"weighting\":{\"distance\":2.5,\"dealer_score\":2.5}},\"pages\":{\"all_pages\":{\"header_footer\":[\"blue\",\"white\"]},\"testing_page\":{\"megatron\":\"none\",\"header\":\"white\"}},\"algorithms\":{\"feature_importance\":false}},\"excluded\":false}]";

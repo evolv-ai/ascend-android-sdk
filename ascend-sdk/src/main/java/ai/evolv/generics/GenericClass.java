@@ -1,4 +1,4 @@
-package ai.evolv.ascend.android.generics;
+package ai.evolv.generics;
 
 public class GenericClass<T> {
 

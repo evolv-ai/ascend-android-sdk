@@ -1,6 +1,4 @@
-package ai.evolv.ascend.android;
-
-import android.support.test.runner.AndroidJUnit4;
+package ai.evolv;
 
 import com.google.gson.JsonArray;
 
@@ -8,13 +6,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(AndroidJUnit4.class)
 public class AscendClientTest {
 
     private static final String environmentId = "test_12345";
@@ -59,21 +55,6 @@ public class AscendClientTest {
     }
 
     @Test
-    public void testClientInitialization() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        AllocatorTest allocatorTest = new AllocatorTest();
-        when(mockParticipantClient.executeGetRequest(allocatorTest.createAllocationsUrl(actualConfig)))
-                .thenReturn(allocatorTest.getMockedListenableFuture(rawAllocation));
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig,
-                mockParticipantClient, actualConfig);
-
-        AscendClient client = AscendClient.init(mockConfig);
-        Assert.assertNotNull(client);
-        Assert.assertEquals(new AllocationsTest().parseRawAllocations(rawAllocation),
-                actualConfig.getAscendAllocationStore().get());
-    }
-
-    @Test
     public void testClientInitializationPreviousAllocationsSameUser() {
         String returningAllocation = "[{\"uid\":\"returning_uid\",\"sid\":\"test_sid\",\"eid\":\"test_eid\",\"cid\":\"test_cid\",\"genome\":{\"search\":{\"weighting\":{\"distance\":2.5,\"dealer_score\":2.5}},\"pages\":{\"all_pages\":{\"header_footer\":[\"blue\",\"white\"]},\"testing_page\":{\"megatron\":\"none\",\"header\":\"white\"}},\"algorithms\":{\"feature_importance\":false}},\"excluded\":false}]";
 
@@ -93,21 +74,6 @@ public class AscendClientTest {
                 actualConfig.getAscendAllocationStore().get());
         Assert.assertNotEquals(oldUserId, actualConfig.getAscendParticipant().getUserId());
         Assert.assertEquals("returning_uid", actualConfig.getAscendParticipant().getUserId());
-    }
-
-    @Test
-    public void testGetValueFromClient() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        AllocatorTest allocatorTest = new AllocatorTest();
-        when(mockParticipantClient.executeGetRequest(allocatorTest.createAllocationsUrl(actualConfig)))
-                .thenReturn(allocatorTest.getMockedListenableFuture(rawAllocation));
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig,
-                mockParticipantClient, actualConfig);
-
-        AscendClient client = AscendClient.init(mockConfig);
-        Boolean featureImportance = client.get("algorithms.feature_importance", true);
-        Assert.assertNotNull(featureImportance);
-        Assert.assertFalse(featureImportance);
     }
 
     @Test

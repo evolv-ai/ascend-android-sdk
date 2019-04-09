@@ -1,4 +1,4 @@
-package ai.evolv.ascend.android;
+package ai.evolv;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import ai.evolv.ascend.android.exceptions.AscendKeyError;
+import ai.evolv.exceptions.AscendKeyError;
 
 class Allocations {
 

@@ -39,10 +39,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.26'
 
     testImplementation 'junit:junit:4.12'
-
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    androidTestImplementation 'org.mockito:mockito-android:2.25.1'
+    testImplementation 'org.mockito:mockito-all:1.10.19'
 }
 
 task deleteJar(type: Delete) {

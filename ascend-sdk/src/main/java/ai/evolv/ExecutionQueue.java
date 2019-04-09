@@ -1,4 +1,4 @@
-package ai.evolv.ascend.android;
+package ai.evolv;
 
 import com.google.gson.JsonArray;
 
@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import ai.evolv.ascend.android.exceptions.AscendKeyError;
+import ai.evolv.exceptions.AscendKeyError;
 
 class ExecutionQueue {
 

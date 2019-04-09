@@ -1,6 +1,4 @@
-package ai.evolv.ascend.android;
-
-import android.support.test.runner.AndroidJUnit4;
+package ai.evolv;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonArray;
@@ -9,7 +7,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.mockito.Mockito.*;
 import org.mockito.Mock;
@@ -17,13 +14,13 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import ai.evolv.ascend.android.exceptions.AscendAllocationException;
+import ai.evolv.exceptions.AscendAllocationException;
 import okhttp3.HttpUrl;
 
-@RunWith(AndroidJUnit4.class)
 public class AllocatorTest {
 
     private static final String environmentId = "test_12345";
@@ -119,25 +116,6 @@ public class AllocatorTest {
         Allocator allocator = new Allocator(mockConfig);
         HttpUrl url = allocator.createAllocationsUrl();
         Assert.assertEquals(createAllocationsUrl(actualConfig), url);
-    }
-
-    @Test
-    public void testFetchAllocations() {
-
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        when(mockParticipantClient.executeGetRequest(createAllocationsUrl(actualConfig)))
-                .thenReturn(getMockedListenableFuture(rawAllocation));
-        mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, mockParticipantClient,
-                actualConfig);
-
-        try {
-            Allocator allocator = new Allocator(mockConfig);
-            JsonArray expAllocations = new AllocationsTest().parseRawAllocations(rawAllocation);
-            JsonArray allocations = allocator.fetchAllocations();
-            Assert.assertEquals(expAllocations, allocations);
-        } catch (AscendAllocationException e) {
-            Assert.fail(e.getMessage());
-        }
     }
 
 }

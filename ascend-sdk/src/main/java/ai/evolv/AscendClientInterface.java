@@ -1,4 +1,4 @@
-package ai.evolv.ascend.android;
+package ai.evolv;
 
 public interface AscendClientInterface {
 

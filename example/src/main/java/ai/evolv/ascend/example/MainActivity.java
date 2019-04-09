@@ -7,9 +7,9 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import ai.evolv.ascend.android.AscendAllocationStore;
-import ai.evolv.ascend.android.AscendClient;
-import ai.evolv.ascend.android.AscendConfig;
+import ai.evolv.AscendAllocationStore;
+import ai.evolv.AscendClient;
+import ai.evolv.AscendConfig;
 
 public class MainActivity extends AppCompatActivity {
 

@@ -3,7 +3,7 @@ package ai.evolv.ascend.example;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 
-import ai.evolv.ascend.android.AscendAllocationStore;
+import ai.evolv.AscendAllocationStore;
 
 public class CustomAllocationStore implements AscendAllocationStore {
     /*

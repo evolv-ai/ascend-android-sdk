@@ -1,4 +1,4 @@
-package ai.evolv.ascend.android;
+package ai.evolv;
 
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonArray;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import ai.evolv.ascend.android.exceptions.AscendAllocationException;
+import ai.evolv.exceptions.AscendAllocationException;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;

@@ -1,4 +1,4 @@
-package ai.evolv.ascend.android;
+package ai.evolv;
 
 import com.google.gson.JsonArray;
 
@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 
-import ai.evolv.ascend.android.exceptions.AscendKeyError;
-import ai.evolv.ascend.android.generics.GenericClass;
+import ai.evolv.exceptions.AscendKeyError;
+import ai.evolv.generics.GenericClass;
 
 public class AscendClient implements AscendClientInterface {
 
@@ -33,15 +33,7 @@ public class AscendClient implements AscendClientInterface {
     }
 
     public static AscendClient init(AscendConfig config) {
-        logger.info("Initializing Ascend Client." +
-                        "\nVersion: %s" +
-                        "\nAscendParticipant API Endpoint: %s" +
-                        "\nAscendParticipant API Version: %s" +
-                        "\nEnvironment ID: %s",
-                BuildConfig.VERSION_NAME,
-                config.getDomain(),
-                config.getVersion(),
-                config.getEnvironmentId());
+        logger.info("Initializing Ascend Client.");
 
         AscendAllocationStore store = config.getAscendAllocationStore();
         Allocator allocator = new Allocator(config);
