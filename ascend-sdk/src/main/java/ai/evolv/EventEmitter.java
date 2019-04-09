@@ -1,6 +1,4 @@
-package ai.evolv.ascend.android;
-
-import android.support.annotation.NonNull;
+package ai.evolv;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -17,7 +15,7 @@ class EventEmitter {
     private final AscendConfig config;
     private final AscendParticipant ascendParticipant;
 
-    EventEmitter(@NonNull AscendConfig config) {
+    EventEmitter(AscendConfig config) {
         this.client = config.getParticipantClient();
         this.config = config;
         this.ascendParticipant = config.getAscendParticipant();

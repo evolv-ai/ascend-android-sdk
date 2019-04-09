@@ -1,6 +1,4 @@
-package ai.evolv.ascend.android;
-
-import android.support.annotation.NonNull;
+package ai.evolv;
 
 public class AscendConfig {
 
@@ -19,6 +17,7 @@ public class AscendConfig {
     private final AscendAllocationStore ascendAllocationStore;
     private final AscendParticipant ascendParticipant;
     private final HttpParticipantClient participantClient;
+    private final ExecutionQueue executionQueue;
 
     private AscendConfig(String httpScheme, String domain, String version, String environmentId,
                          long timeout, AscendAllocationStore ascendAllocationStore, AscendParticipant ascendParticipant) {
@@ -30,6 +29,7 @@ public class AscendConfig {
         this.ascendAllocationStore = ascendAllocationStore;
         this.ascendParticipant = ascendParticipant;
         this.participantClient = new HttpParticipantClient();
+        this.executionQueue = new ExecutionQueue();
     }
 
     String getHttpScheme() {
@@ -64,6 +64,10 @@ public class AscendConfig {
         return this.participantClient;
     }
 
+    ExecutionQueue getExecutionQueue() {
+        return this.executionQueue;
+    }
+
     public static class Builder {
 
         private String httpScheme = DEFAULT_HTTP_SCHEME;
@@ -83,7 +87,7 @@ public class AscendConfig {
          * </p>
          * @param environmentId unique id representing a customer's environment
          */
-        public Builder(@NonNull String environmentId) {
+        public Builder(String environmentId) {
             this.environmentId = environmentId;
         }
 
@@ -130,8 +134,8 @@ public class AscendConfig {
         /**
          * Sets a custom timeout (in milliseconds) for the Allocation call. If the allocation call takes longer
          * than this timeout, the default values are used and the confirmation and contamination events get squashed.
-         * @param timeout
-         * @return
+         * @param timeout number of milliseconds to wait for an allocation to occur
+         * @return AscendClientBuilder class
          */
         public Builder setTimeout(long timeout) {
             this.timeout = timeout;
@@ -140,8 +144,8 @@ public class AscendConfig {
 
         /**
          * Tells the SDK to use either http or https.
-         * @param scheme
-         * @return
+         * @param scheme either http or https
+         * @return AscendClientBuilder class
          */
         public Builder setHttpScheme(String scheme) {
             this.httpScheme = scheme;

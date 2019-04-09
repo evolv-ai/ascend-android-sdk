@@ -1,13 +1,8 @@
-package ai.evolv.ascend.android;
-
-import android.renderscript.Allocation;
-import android.support.test.runner.AndroidJUnit4;
+package ai.evolv;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
 public class AscendConfigTest {
 
     private static final String ENVIRONMENT_ID = "test_12345";

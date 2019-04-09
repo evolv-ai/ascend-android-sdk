@@ -1,4 +1,4 @@
-package ai.evolv.ascend.android;
+package ai.evolv;
 
 public interface AscendClientInterface {
 
@@ -7,13 +7,29 @@ public interface AscendClientInterface {
      * <p>
      *     Given a unique key this method will retrieve the key's associated value. A default value
      *     can also be specified in case any errors occur during the values retrieval. If the allocation
-     *     call times out or fails the default value is always returned.
+     *     call times out or fails the default value is always returned. This method is blocking, it will wait
+     *     till the allocation is available and then return.
      * </p>
      * @param key a unique key identifying a specific value in the participants allocation
      * @param defaultValue a default value to return upon error
      * @return a value associated with the given key
      */
     <T> T get(String key, T defaultValue);
+
+    /**
+     * Retrieves a value from Ascend asynchronously and applies some custom action.
+     * <p>
+     *     This method is non blocking. It will preform the programmed action once the allocation
+     *     is available. If there is already of stored allocation it will immediately apply the
+     *     value retrieved and then when the new allocation returns it will reapply the new changes
+     *     if the experiment has changed. 
+     * </p>
+     * @param key
+     * @param defaultValue
+     * @param function
+     * @param <T>
+     */
+    <T> void subscribe(String key, T defaultValue, AscendAction<T> function);
 
     /**
      * Emits a generic event to be recorded by Ascend.

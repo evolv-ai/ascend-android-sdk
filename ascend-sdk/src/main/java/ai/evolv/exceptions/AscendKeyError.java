@@ -1,4 +1,4 @@
-package ai.evolv.ascend.android.exceptions;
+package ai.evolv.exceptions;
 
 public class AscendKeyError extends Exception {
     public AscendKeyError(String errorMessage) {
