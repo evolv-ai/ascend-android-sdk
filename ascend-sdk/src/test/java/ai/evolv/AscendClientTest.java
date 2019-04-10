@@ -58,7 +58,7 @@ public class AscendClientTest {
     public void testClientInitializationPreviousAllocationsSameUser() {
         String returningAllocation = "[{\"uid\":\"returning_uid\",\"sid\":\"test_sid\",\"eid\":\"test_eid\",\"cid\":\"test_cid\",\"genome\":{\"search\":{\"weighting\":{\"distance\":2.5,\"dealer_score\":2.5}},\"pages\":{\"all_pages\":{\"header_footer\":[\"blue\",\"white\"]},\"testing_page\":{\"megatron\":\"none\",\"header\":\"white\"}},\"algorithms\":{\"feature_importance\":false}},\"excluded\":false}]";
 
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId)
+        AscendConfig actualConfig = AscendConfig.builder(environmentId)
                 .setAscendAllocationStore(createAllocationStoreWithAllocations(returningAllocation))
                 .build();
 
@@ -68,7 +68,7 @@ public class AscendClientTest {
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig,
                 mockParticipantClient, actualConfig);
 
-        AscendClient client = AscendClient.init(mockConfig);
+        AscendClient client = AscendClientFactory.init(mockConfig);
         Assert.assertNotNull(client);
         Assert.assertEquals(new AllocationsTest().parseRawAllocations(returningAllocation),
                 actualConfig.getAscendAllocationStore().get());
@@ -78,14 +78,14 @@ public class AscendClientTest {
 
     @Test
     public void testGetValueFromClientIfErrorReturnDefault() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
+        AscendConfig actualConfig = AscendConfig.builder(environmentId).build();
         AllocatorTest allocatorTest = new AllocatorTest();
         when(mockParticipantClient.executeGetRequest(allocatorTest.createAllocationsUrl(actualConfig)))
                 .thenReturn(allocatorTest.getMockedListenableFuture(rawAllocation));
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig,
                 mockParticipantClient, actualConfig);
 
-        AscendClient client = AscendClient.init(mockConfig);
+        AscendClient client = AscendClientFactory.init(mockConfig);
         Boolean featureImportance = client.get("algorithms.key_error", true);
         Assert.assertNotNull(featureImportance);
         Assert.assertTrue(featureImportance);

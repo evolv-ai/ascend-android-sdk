@@ -1,7 +1,6 @@
 package ai.evolv;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.JsonArray;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -14,17 +13,14 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import ai.evolv.exceptions.AscendAllocationException;
 import okhttp3.HttpUrl;
 
 public class AllocatorTest {
 
     private static final String environmentId = "test_12345";
-    private static final String rawAllocation = "[{\"uid\":\"test_uid\",\"sid\":\"test_sid\",\"eid\":\"test_eid\",\"cid\":\"test_cid\",\"genome\":{\"search\":{\"weighting\":{\"distance\":2.5,\"dealer_score\":2.5}},\"pages\":{\"all_pages\":{\"header_footer\":[\"blue\",\"white\"]},\"testing_page\":{\"megatron\":\"none\",\"header\":\"white\"}},\"algorithms\":{\"feature_importance\":false}},\"excluded\":false}]";
 
     @Mock
     private AscendConfig mockConfig;
