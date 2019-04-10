@@ -17,7 +17,7 @@ For a complete example of how to use this SDK see our [example app](https://gith
 
 2. Initialize the AscendClient.
     ```java
-       AscendClient client = AscendClient.init(config);
+       AscendClient client = AscendClientFactory.init(config);
     ```
     
 ### Confirm the Allocation
