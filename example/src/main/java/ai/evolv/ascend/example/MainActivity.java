@@ -1,5 +1,6 @@
 package ai.evolv.ascend.example;
 
+import ai.evolv.AscendClientFactory;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -24,13 +25,13 @@ public class MainActivity extends AppCompatActivity {
 
         // build config with custom timeout and custom allocation store
         // set client to use sandbox environment
-        AscendConfig config = new AscendConfig.Builder("sandbox")
+        AscendConfig config = AscendConfig.builder("sandbox")
                 .setTimeout(1000)
                 .setAscendAllocationStore(store)
                 .build();
 
         // initialize the client
-        client = AscendClient.init(config);
+        client = AscendClientFactory.init(config);
 
         client.subscribe("ui.layout", "option_1", layoutOption -> {
             runOnUiThread(() -> {

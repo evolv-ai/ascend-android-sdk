@@ -1,135 +1,71 @@
 package ai.evolv;
 
-import com.google.gson.JsonArray;
+public interface AscendClient {
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+    /**
+     * Retrieves a value from the participant's allocation, returns a default upon error.
+     * <p>
+     *     Given a unique key this method will retrieve the key's associated value. A default value
+     *     can also be specified in case any errors occur during the values retrieval. If the allocation
+     *     call times out or fails the default value is always returned. This method is blocking, it will wait
+     *     till the allocation is available and then return.
+     * </p>
+     * @param key a unique key identifying a specific value in the participants allocation
+     * @param defaultValue a default value to return upon error
+     * @return a value associated with the given key
+     */
+    <T> T get(String key, T defaultValue);
 
-import java.util.concurrent.Future;
+    /**
+     * Retrieves a value from Ascend asynchronously and applies some custom action.
+     * <p>
+     *     This method is non blocking. It will preform the programmed action once the allocation
+     *     is available. If there is already of stored allocation it will immediately apply the
+     *     value retrieved and then when the new allocation returns it will reapply the new changes
+     *     if the experiment has changed. 
+     * </p>
+     * @param key a unique key identifying a specific value in the participants allocation
+     * @param defaultValue a default value to return upon error
+     * @param function a handler that is invoked when the allocation is updated
+     */
+    <T> void subscribe(String key, T defaultValue, AscendAction<T> function);
 
-import ai.evolv.exceptions.AscendKeyError;
-import ai.evolv.generics.GenericClass;
+    /**
+     * Emits a generic event to be recorded by Ascend.
+     * <p>
+     *     Sends an event to Ascend to be recorded and reported upon. Also records a generic score
+     *     value to be associated with the event.
+     * </p>
+     * @param key the identifier of the event
+     * @param score a score to be associated with the event
+     */
+    void emitEvent(String key, Double score);
 
-public class AscendClient implements AscendClientInterface {
+    /**
+     * Emits a generic event to be recorded by Ascend.
+     * <p>
+     *     Sends an event to Ascend to be recorded and reported upon.
+     * </p>
+     * @param key the identifier of the event
+     */
+    void emitEvent(String key);
 
-    private static Logger logger = LoggerFactory.getLogger(AscendClient.class);
+    /**
+     * Sends a confirmed event to Ascend.
+     * <p>
+     *     Method produces a confirmed event which confirms the participant's allocation. Method will not do anything
+     *     in the event that the allocation timed out or failed.
+     * </p>
+     */
+    void confirm();
 
-    private final EventEmitter eventEmitter;
-    private final Future<JsonArray> futureAllocations;
-    private final ExecutionQueue executionQueue;
-    private final Allocator allocator;
-    private final AscendAllocationStore store;
-    private final boolean previousAllocations;
+    /**
+     * Sends a contamination event to Ascend.
+     * <p>
+     *     Method produces a contamination event which will contaminate the participant's
+     *     allocation. Method will not do anything in the event that the allocation timed out or failed.
+     * </p>
+     */
+    void contaminate();
 
-    private AscendClient(AscendConfig config, EventEmitter emitter,
-                         Future<JsonArray> allocations, Allocator allocator,
-                         boolean previousAllocations) {
-        this.store = config.getAscendAllocationStore();
-        this.executionQueue = config.getExecutionQueue();
-        this.eventEmitter = emitter;
-        this.futureAllocations = allocations;
-        this.allocator = allocator;
-        this.previousAllocations = previousAllocations;
-    }
-
-    public static AscendClient init(AscendConfig config) {
-        logger.info("Initializing Ascend Client.");
-
-        AscendAllocationStore store = config.getAscendAllocationStore();
-        Allocator allocator = new Allocator(config);
-
-        JsonArray previousAllocations = store.get();
-        boolean reconciliationNeeded = false;
-        if (Allocator.allocationsNotEmpty(previousAllocations)) {
-            String storedUserId = previousAllocations.get(0).getAsJsonObject().get("uid").getAsString();
-            config.getAscendParticipant().setUserId(storedUserId);
-            reconciliationNeeded = true;
-        }
-
-        // fetch and reconcile allocations asynchronously
-        Future<JsonArray> fetchedAllocations = allocator.fetchAllocations();
-
-        return new AscendClient(config, new EventEmitter(config), fetchedAllocations, allocator, reconciliationNeeded);
-    }
-
-    @Override
-    public <T> T get(String key, T defaultValue) {
-        try {
-            if (futureAllocations == null) {
-                return defaultValue;
-            }
-
-            // this is blocking
-            JsonArray allocations = futureAllocations.get();
-            if (!Allocator.allocationsNotEmpty(allocations)) {
-                return defaultValue;
-            }
-
-            GenericClass<T> cls = new GenericClass(defaultValue.getClass());
-            return new Allocations(allocations).getValueFromGenome(key, cls.getMyType());
-        } catch (Exception e) {
-            logger.error("There was as error retrieving the requested value. Returning the default.", e);
-            return defaultValue;
-        }
-    }
-
-    @Override
-    public <T> void subscribe(String key, T defaultValue, AscendAction<T> function) {
-        Execution execution = new Execution(key, defaultValue, function);
-        if (previousAllocations) {
-            try {
-                JsonArray allocations = store.get();
-                execution.executeWithAllocation(allocations);
-            } catch (AscendKeyError e) {
-                logger.warn("There was an error retrieving the value of %s from the allocation.",
-                        execution.getKey());
-            }
-        }
-
-        Allocator.AllocationStatus allocationStatus = allocator.getAllocationStatus();
-        if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
-            executionQueue.enqueue(execution);
-            return;
-        } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED){
-            try {
-                JsonArray allocations = store.get();
-                execution.executeWithAllocation(allocations);
-                return;
-            } catch (AscendKeyError e) {
-                logger.warn("There was an error retrieving the value of %s from the allocation.",
-                        execution.getKey());
-            }
-        }
-        execution.executeWithDefault();
-    }
-
-    @Override
-    public void emitEvent(String key, Double score) {
-        this.eventEmitter.emit(key, score);
-    }
-
-    @Override
-    public void emitEvent(String key) {
-        this.eventEmitter.emit(key);
-    }
-
-    @Override
-    public void confirm() {
-        Allocator.AllocationStatus allocationStatus = allocator.getAllocationStatus();
-        if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
-            allocator.sandBagConfirmation();
-        } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED){
-            eventEmitter.confirm(store.get());
-        }
-    }
-
-    @Override
-    public void contaminate() {
-        Allocator.AllocationStatus allocationStatus = allocator.getAllocationStatus();
-        if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
-            allocator.sandBagContamination();
-        } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED){
-            eventEmitter.contaminate(store.get());
-        }
-    }
 }

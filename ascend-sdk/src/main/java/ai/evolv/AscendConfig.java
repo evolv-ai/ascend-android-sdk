@@ -32,6 +32,10 @@ public class AscendConfig {
         this.executionQueue = new ExecutionQueue();
     }
 
+    public static Builder builder(String environmentId) {
+        return new Builder(environmentId);
+    }
+
     String getHttpScheme() {
         return httpScheme;
     }
@@ -87,7 +91,7 @@ public class AscendConfig {
          * </p>
          * @param environmentId unique id representing a customer's environment
          */
-        public Builder(String environmentId) {
+        Builder(String environmentId) {
             this.environmentId = environmentId;
         }
 
