@@ -1,12 +1,12 @@
 package ai.evolv;
 
+import ai.evolv.exceptions.AscendKeyError;
+import ai.evolv.generics.GenericClass;
+
 import com.google.gson.JsonArray;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import ai.evolv.exceptions.AscendKeyError;
-import ai.evolv.generics.GenericClass;
 
 class Execution<T> {
 

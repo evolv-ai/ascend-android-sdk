@@ -1,24 +1,18 @@
 package ai.evolv;
 
+import ai.evolv.exceptions.AscendRuntimeException;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 
+import java.net.URI;
+import java.net.URL;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import ai.evolv.exceptions.AscendAllocationException;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 
 class Allocator {
@@ -34,6 +28,7 @@ class Allocator {
     private final AscendConfig config;
     private final AscendParticipant ascendParticipant;
     private final EventEmitter eventEmitter;
+    private final HttpClient httpClient;
 
     private boolean confirmationSandbagged = false;
     private boolean contaminationSandbagged = false;
@@ -45,8 +40,10 @@ class Allocator {
         this.store = config.getAscendAllocationStore();
         this.config = config;
         this.ascendParticipant = config.getAscendParticipant();
+        this.httpClient = config.getHttpClient();
         this.allocationStatus = AllocationStatus.FETCHING;
         this.eventEmitter = new EventEmitter(config);
+
     }
 
     AllocationStatus getAllocationStatus() {
@@ -61,67 +58,40 @@ class Allocator {
         contaminationSandbagged = true;
     }
 
-    HttpUrl createAllocationsUrl() {
-        return new HttpUrl.Builder()
-                .scheme(config.getHttpScheme())
-                .host(config.getDomain())
-                .addPathSegment(config.getVersion())
-                .addPathSegment(config.getEnvironmentId())
-                .addPathSegment("allocations")
-                .addQueryParameter("uid", ascendParticipant.getUserId())
-                .addQueryParameter("sid", ascendParticipant.getSessionId())
-                .build();
+    String createAllocationsUrl() {
+        try {
+            String path = String.format("//%s/%s/%s/allocations", config.getDomain(),
+                    config.getVersion(),
+                    config.getEnvironmentId());
+            String queryString = String.format("uid=%s&sid=%s", ascendParticipant.getUserId(),
+                    ascendParticipant.getSessionId());
+            URI uri = new URI(config.getHttpScheme(), null, path, queryString, null);
+            URL url = uri.toURL();
+
+            return url.toString();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return "";
+        }
     }
 
-    Future<JsonArray> fetchAllocations() {
-        OkHttpClient client = new OkHttpClient.Builder()
-                .callTimeout(config.getTimeout(), TimeUnit.MILLISECONDS)
-                .retryOnConnectionFailure(false)
-                .build();
+    ListenableFuture<JsonArray> fetchAllocations() {
+        ListenableFuture<String> responseFuture = httpClient.get(createAllocationsUrl());
+        SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
 
-        final Request request = new Request.Builder()
-                .url(createAllocationsUrl())
-                .build();
-
-        final SettableFuture<JsonArray> responseFuture = SettableFuture.create();
-
-        client.newCall(request).enqueue(new Callback() {
+        responseFuture.addListener(new Runnable() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                resolveAllocationFailure(responseFuture);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) {
-                String body = "";
-                JsonArray allocations = new JsonArray();
+            public void run() {
                 try {
-                    try {
-                        ResponseBody responseBody = response.body();
-                        if (responseBody != null) {
-                            body = responseBody.string();
-                        }
+                    JsonParser parser = new JsonParser();
+                    JsonArray allocations = parser.parse(responseFuture.get()).getAsJsonArray();
 
-                        if (!response.isSuccessful()) {
-                            throw new IOException(String.format(
-                                    "Unexpected response when making GET request: %s using url: %s with body: %s",
-                                    response, request.url(), body));
-                        }
-
-                        JsonParser parser = new JsonParser();
-                        allocations = parser.parse(body).getAsJsonArray();
-
-                        JsonArray previousAllocations = store.get();
-                        if (allocationsNotEmpty(previousAllocations)) {
-                            allocations = Allocations.reconcileAllocations(previousAllocations, allocations);
-                        }
-
-                    } catch(Exception e) {
-                        throw new AscendAllocationException(e.getMessage());
+                    JsonArray previousAllocations = store.get();
+                    if (allocationsNotEmpty(previousAllocations)) {
+                        allocations = Allocations.reconcileAllocations(previousAllocations, allocations);
                     }
 
                     store.put(allocations);
-                    responseFuture.set(allocations);
                     allocationStatus = AllocationStatus.RETRIEVED;
 
                     if (confirmationSandbagged) {
@@ -132,33 +102,32 @@ class Allocator {
                         eventEmitter.contaminate(allocations);
                     }
 
+                    allocationsFuture.set(allocations);
+
                     // could throw an exception due to customer's action logic
-                    // always surface any customer implementation errors
-                    executionQueue.executeAllWithValuesFromAllocations(allocations);
-                } catch (AscendAllocationException e) {
-                    resolveAllocationFailure(responseFuture);
+                    try {
+                        executionQueue.executeAllWithValuesFromAllocations(allocations);
+                    } catch (Exception e) {
+                        throw new AscendRuntimeException(e);
+                    }
+                } catch (AscendRuntimeException e){
+                    logger.error(e.getMessage());
                 } catch (Exception e) {
-                    allocationStatus = AllocationStatus.FAILED;
-                    logger.warn("There was an error making an allocation request.",e);
-                } finally {
-                    response.close();
+                    logger.warn(e.getMessage());
+                    allocationsFuture.set(resolveAllocationFailure());
                 }
             }
+        }, MoreExecutors.directExecutor());
 
-
-        });
-
-        return  responseFuture;
+        return allocationsFuture;
     }
 
-    private void resolveAllocationFailure(SettableFuture<JsonArray> future) {
+    JsonArray resolveAllocationFailure() {
         logger.warn("There was an error while making an allocation request.");
 
         JsonArray allocations = store.get();
         if (allocationsNotEmpty(allocations)) {
             logger.warn("Falling back to participant's previous allocation.");
-
-            future.set(allocations);
 
             if (confirmationSandbagged) {
                 eventEmitter.confirm(allocations);
@@ -173,11 +142,13 @@ class Allocator {
         } else {
             logger.warn("Falling back to the supplied defaults.");
 
-            future.set(new JsonArray());
-
             allocationStatus = AllocationStatus.FAILED;
             executionQueue.executeAllWithValuesFromDefaults();
+
+            allocations = new JsonArray();
         }
+
+        return allocations;
     }
 
     static boolean allocationsNotEmpty(JsonArray allocations) {

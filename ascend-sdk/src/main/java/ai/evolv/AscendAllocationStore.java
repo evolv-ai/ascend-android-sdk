@@ -7,8 +7,8 @@ public interface AscendAllocationStore {
     /**
      * Retrieves a JsonArray.
      * <p>
-     *     Retrieves a JsonArray that represents the participant's allocations. If there are no stored allocations,
-     *     should return an empty JsonArray.
+     *     Retrieves a JsonArray that represents the participant's allocations.
+     *     If there are no stored allocations, should return an empty JsonArray.
      * </p>
      * @return a participant's allocations
      */
