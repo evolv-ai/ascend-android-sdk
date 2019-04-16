@@ -1,0 +1,7 @@
+jobs:
+- job: BuildLintUnitTest
+  displayName: Build, Lint and Unit Test
+  pool:
+    vmImage: 'Ubuntu-16.04'
+  steps:
+  - bash: ./gradlew clean build -x signArchives

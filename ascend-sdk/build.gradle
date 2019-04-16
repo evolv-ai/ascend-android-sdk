@@ -1,4 +1,10 @@
 apply plugin: 'com.android.library'
+apply plugin: 'signing'
+apply plugin: 'maven'
+
+group = "ai.evolv"
+archivesBaseName = "ascend-android-sdk"
+version = "0.5.0"
 
 android {
     compileSdkVersion 28
@@ -12,11 +18,10 @@ android {
         minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
-        versionName "0.5.0"
+        versionName version
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        multiDexEnabled true
     }
 
     buildTypes {
@@ -26,31 +31,89 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:multidex:1.0.3'
-    implementation 'com.android.support:appcompat-v7:28.0.0'
+    compileOnly 'com.android.support:appcompat-v7:28.0.0'
+    compileOnly 'com.squareup.okhttp3:okhttp:3.14.0'
 
     implementation 'com.google.guava:guava:27.1-android'
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'org.slf4j:slf4j-android:1.7.26'
 
-    compileOnly 'com.squareup.okhttp3:okhttp:3.14.0'
-
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-all:1.10.19'
 }
 
-task deleteJar(type: Delete) {
-    delete 'build/outputs/ascend-sdk.jar'
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
 }
 
-task createJar(type: Copy) {
-    from('build/intermediates/packaged-classes/release/')
-    into('build/outputs/')
-    include('classes.jar')
-    rename ('classes.jar', 'ascend-sdk.jar')
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'Ascend SDK'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'SDK to interact with the Ascend product.'
+                url 'https://www.evolv.ai/ascend/'
+
+                scm {
+                    connection 'scm:git:git://github.com/evolv-ai/ascend-java-sdk.git'
+                    developerConnection 'scm:git:ssh:git@github.com:evolv-ai/ascend-java-sdk.git'
+                    url 'https://github.com/evolv-ai/ascend-java-sdk'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'frazerbayley'
+                        name 'Frazer Bayley'
+                        email 'frazer.bayley@evolv.ai'
+                    }
+                }
+            }
+        }
+    }
 }

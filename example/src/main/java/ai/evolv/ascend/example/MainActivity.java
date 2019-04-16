@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String myStoredAllocation = "[{\"uid\":\"sandbox_user\",\"eid\":\"experiment_1\",\"cid\":\"candidate_3\",\"genome\":{\"ui\":{\"layout\":\"option_2\",\"buttons\":{\"checkout\":{\"text\":\"Begin Secure Checkout\",\"color\":\"#f3b36d\"},\"info\":{\"text\":\"Product Specifications\",\"color\":\"#f3b36d\"}}},\"search\":{\"weighting\":3.5}},\"excluded\":false}]";
+        String myStoredAllocation = "[{\"uid\":\"sandbox_user\",\"eid\":\"experiment_2\",\"cid\":\"candidate_3\",\"genome\":{\"ui\":{\"layout\":\"option_2\",\"buttons\":{\"checkout\":{\"text\":\"Begin Secure Checkout\",\"color\":\"#f3b36d\"},\"info\":{\"text\":\"Product Specifications\",\"color\":\"#f3b36d\"}}},\"search\":{\"weighting\":3.5}},\"excluded\":false}]";
         AscendAllocationStore store = new CustomAllocationStore(myStoredAllocation);
 
         HttpClient httpClient = new OkHttpClientImpl(3000);
@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         // build config with custom timeout and custom allocation store
         // set client to use sandbox environment
         AscendConfig config = AscendConfig.builder("sandbox", httpClient)
-                .setAscendAllocationStore(store)
+//                .setAscendAllocationStore(store)
                 .build();
 
         // initialize the client
