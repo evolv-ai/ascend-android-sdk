@@ -12,7 +12,7 @@ For a complete example of how to use this SDK see our [example app](https://gith
 
 1. Build an AscendConfig instance.
     ```java
-       AscendConfig config = AscendConfig.builder(<environment_id>).build();
+       AscendConfig config = AscendConfig.builder(<environment_id>, <http_client>).build();
     ```
 
 2. Initialize the AscendClient.
