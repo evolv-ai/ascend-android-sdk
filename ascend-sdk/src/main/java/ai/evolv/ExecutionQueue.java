@@ -42,7 +42,12 @@ class ExecutionQueue {
     void executeAllWithValuesFromDefaults() {
         while (!queue.isEmpty()) {
             Execution execution = queue.remove();
-            execution.executeWithDefault();
+            try {
+                execution.executeWithDefault();
+            } catch (Exception e) {
+                LOGGER.error("There was an issue while performing one of" +
+                        " the stored actions.", e);
+            }
         }
     }
 
