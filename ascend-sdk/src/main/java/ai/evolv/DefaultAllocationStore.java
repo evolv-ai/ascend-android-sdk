@@ -2,11 +2,11 @@ package ai.evolv;
 
 import com.google.gson.JsonArray;
 
-public class DefaultAscendAllocationStore implements AscendAllocationStore {
+public class DefaultAllocationStore implements AscendAllocationStore {
 
     private static JsonArray allocations;
 
-    DefaultAscendAllocationStore() {
+    DefaultAllocationStore() {
         this.allocations = new JsonArray();
     }
 

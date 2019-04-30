@@ -12,6 +12,10 @@ public class AscendParticipant {
         this.sessionId = sessionId;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     String getUserId() {
         return userId;
     }

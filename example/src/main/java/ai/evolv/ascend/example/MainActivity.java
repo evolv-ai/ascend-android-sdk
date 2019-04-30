@@ -8,11 +8,14 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.concurrent.TimeUnit;
+
 import ai.evolv.AscendAllocationStore;
 import ai.evolv.AscendClient;
 import ai.evolv.AscendConfig;
+import ai.evolv.AscendParticipant;
 import ai.evolv.HttpClient;
-import ai.evolv.OkHttpClientImpl;
+import ai.evolv.httpclients.OkHttpClient;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,10 +25,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String myStoredAllocation = "[{\"uid\":\"sandbox_user\",\"eid\":\"experiment_2\",\"cid\":\"candidate_3\",\"genome\":{\"ui\":{\"layout\":\"option_2\",\"buttons\":{\"checkout\":{\"text\":\"Begin Secure Checkout\",\"color\":\"#f3b36d\"},\"info\":{\"text\":\"Product Specifications\",\"color\":\"#f3b36d\"}}},\"search\":{\"weighting\":3.5}},\"excluded\":false}]";
+        String myStoredAllocation = "[{\"uid\":\"sandbox_user\",\"eid\":\"experiment_1\",\"cid\":\"candidate_3\",\"genome\":{\"ui\":{\"layout\":\"option_2\",\"buttons\":{\"checkout\":{\"text\":\"Begin Secure Checkout\",\"color\":\"#f3b36d\"},\"info\":{\"text\":\"Product Specifications\",\"color\":\"#f3b36d\"}}},\"search\":{\"weighting\":3.5}},\"excluded\":false}]";
         AscendAllocationStore store = new CustomAllocationStore(myStoredAllocation);
 
-        HttpClient httpClient = new OkHttpClientImpl(3000);
+        HttpClient httpClient = new OkHttpClient(TimeUnit.MILLISECONDS, 3000);
 
         // build config with custom timeout and custom allocation store
         // set client to use sandbox environment
@@ -34,7 +37,8 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         // initialize the client
-        client = AscendClientFactory.init(config);
+        client = AscendClientFactory.init(config,  AscendParticipant.builder().setUserId("frazer_bayley").build());
+
 
         client.subscribe("ui.layout", "option_1", layoutOption -> {
             runOnUiThread(() -> {
@@ -52,13 +56,12 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
-        client.subscribe("ui.buttons.checkout.text", "Test Message", checkoutButtonText -> {
+        client.subscribe("ui.buttons.checkout.text", "Default Message", checkoutButtonText -> {
             runOnUiThread(() -> {
                 TextView showCountTextView = findViewById(R.id.checkoutButton);
                 showCountTextView.setText(checkoutButtonText);
             });
         });
-
 
         client.confirm();
     }

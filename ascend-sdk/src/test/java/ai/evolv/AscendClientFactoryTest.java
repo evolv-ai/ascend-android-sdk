@@ -57,14 +57,14 @@ public class AscendClientFactoryTest {
         }
     }
 
-    static String createAllocationsUrl(AscendConfig config) {
+    static String createAllocationsUrl(AscendConfig config, AscendParticipant participant) {
         return String.format("%s://%s/%s/%s/allocations?uid=%s&sid=%s",
                 config.getHttpScheme(),
                 config.getDomain(),
                 config.getVersion(),
                 config.getEnvironmentId(),
-                config.getAscendParticipant().getUserId(),
-                config.getAscendParticipant().getSessionId());
+                participant.getUserId(),
+                participant.getSessionId());
     }
 
     @Test
@@ -72,9 +72,10 @@ public class AscendClientFactoryTest {
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
-        SettableFuture<String> mockFuture = SettableFuture.create();
-        mockFuture.set(rawAllocation);
-        when(mockHttpClient.get(createAllocationsUrl(actualConfig))).thenReturn(mockFuture);
+
+        SettableFuture responseFuture = SettableFuture.create();
+        responseFuture.set(rawAllocation);
+        when(mockHttpClient.get(anyString())).thenReturn(responseFuture);
 
         AscendClient client = AscendClientFactory.init(mockConfig);
         verify(mockAllocationStore, times(2)).get();
@@ -83,6 +84,7 @@ public class AscendClientFactoryTest {
 
     @Test
     public void testClientInitSameUser() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         HttpClient mockClient = new MockHttpClient(rawAllocation);
 
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
@@ -93,9 +95,9 @@ public class AscendClientFactoryTest {
         String previousUid = previousAllocations.get(0).getAsJsonObject().get("uid").getAsString();
         when(mockAllocationStore.get()).thenReturn(previousAllocations);
 
-        AscendClient client = AscendClientFactory.init(mockConfig);
+        AscendClient client = AscendClientFactory.init(mockConfig, participant);
         verify(mockAllocationStore, times(2)).get();
         Assert.assertTrue(client instanceof AscendClient);
-        Assert.assertEquals(previousUid, mockConfig.getAscendParticipant().getUserId());
+        Assert.assertEquals(previousUid, participant.getUserId());
     }
 }

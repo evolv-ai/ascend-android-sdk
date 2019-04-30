@@ -15,8 +15,6 @@ import static org.mockito.Mockito.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.concurrent.CompletableFuture;
-
 public class AllocatorTest {
 
     private static final String environmentId = "test_12345";
@@ -62,7 +60,6 @@ public class AllocatorTest {
                                                          ExecutionQueue mockExecutionQueue, HttpClient mockHttpClient,
                                                          AscendAllocationStore mockAllocationStore) {
         when(mockedConfig.getHttpClient()).thenReturn(mockHttpClient);
-        when(mockedConfig.getAscendParticipant()).thenReturn(actualConfig.getAscendParticipant());
         when(mockedConfig.getHttpScheme()).thenReturn(actualConfig.getHttpScheme());
         when(mockedConfig.getDomain()).thenReturn(actualConfig.getDomain());
         when(mockedConfig.getVersion()).thenReturn(actualConfig.getVersion());
@@ -76,37 +73,39 @@ public class AllocatorTest {
         return mockedConfig;
     }
 
-    static String createAllocationsUrl(AscendConfig config) {
+    static String createAllocationsUrl(AscendConfig config, AscendParticipant participant) {
         return String.format("%s://%s/%s/%s/allocations?uid=%s&sid=%s",
                 config.getHttpScheme(),
                 config.getDomain(),
                 config.getVersion(),
                 config.getEnvironmentId(),
-                config.getAscendParticipant().getUserId(),
-                config.getAscendParticipant().getSessionId());
+                participant.getUserId(),
+                participant.getSessionId());
     }
 
-    static String createConfirmationUrl(AscendConfig config, JsonObject allocation) {
+    static String createConfirmationUrl(AscendConfig config, JsonObject allocation,
+                                        AscendParticipant participant) {
         return String.format("%s://%s/%s/%s/events?uid=%s&sid=%s&eid=%s&cid=%s&type=%s",
                 config.getHttpScheme(),
                 config.getDomain(),
                 config.getVersion(),
                 config.getEnvironmentId(),
-                config.getAscendParticipant().getUserId(),
-                config.getAscendParticipant().getSessionId(),
+                participant.getUserId(),
+                participant.getSessionId(),
                 allocation.get("eid").getAsString(),
                 allocation.get("cid").getAsString(),
                 "confirmation");
     }
 
-    static String createContaminationUrl(AscendConfig config, JsonObject allocation) {
+    static String createContaminationUrl(AscendConfig config, JsonObject allocation,
+                                         AscendParticipant participant) {
         return String.format("%s://%s/%s/%s/events?uid=%s&sid=%s&eid=%s&cid=%s&type=%s",
                 config.getHttpScheme(),
                 config.getDomain(),
                 config.getVersion(),
                 config.getEnvironmentId(),
-                config.getAscendParticipant().getUserId(),
-                config.getAscendParticipant().getSessionId(),
+                participant.getUserId(),
+                participant.getSessionId(),
                 allocation.get("eid").getAsString(),
                 allocation.get("cid").getAsString(),
                 "contamination");
@@ -118,9 +117,10 @@ public class AllocatorTest {
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
 
-        Allocator allocator = new Allocator(mockConfig);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        Allocator allocator = new Allocator(mockConfig, participant);
         String actualUrl = allocator.createAllocationsUrl();
-        String expectedUrl = createAllocationsUrl(actualConfig);
+        String expectedUrl = createAllocationsUrl(actualConfig, participant);
         Assert.assertEquals(expectedUrl, actualUrl);
     }
 
@@ -143,7 +143,9 @@ public class AllocatorTest {
         when(mockAllocationStore.get()).thenReturn(allocations);
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
-        Allocator allocator = new Allocator(mockConfig);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
+        Allocator allocator = new Allocator(mockConfig, participant);
         JsonArray actualAllocations = allocator.resolveAllocationFailure();
 
         verify(mockExecutionQueue, times(1)).executeAllWithValuesFromAllocations(allocations);
@@ -159,12 +161,14 @@ public class AllocatorTest {
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
 
-        Allocator allocator = new Allocator(mockConfig);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        Allocator allocator = new Allocator(mockConfig, participant);
         allocator.sandBagConfirmation();
         JsonArray actualAllocations = allocator.resolveAllocationFailure();
 
         verify(mockHttpClient, times(1))
-                .get(createConfirmationUrl(actualConfig, allocations.get(0).getAsJsonObject()));
+                .get(createConfirmationUrl(actualConfig, allocations.get(0).getAsJsonObject(),
+                        participant));
         verify(mockExecutionQueue, times(1))
                 .executeAllWithValuesFromAllocations(allocations);
         Assert.assertEquals(Allocator.AllocationStatus.RETRIEVED, allocator.getAllocationStatus());
@@ -179,12 +183,14 @@ public class AllocatorTest {
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
 
-        Allocator allocator = new Allocator(mockConfig);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        Allocator allocator = new Allocator(mockConfig, participant);
         allocator.sandBagContamination();
         JsonArray actualAllocations = allocator.resolveAllocationFailure();
 
         verify(mockHttpClient, times(1))
-                .get(createContaminationUrl(actualConfig, allocations.get(0).getAsJsonObject()));
+                .get(createContaminationUrl(actualConfig, allocations.get(0).getAsJsonObject(),
+                        participant));
         verify(mockExecutionQueue, times(1))
                 .executeAllWithValuesFromAllocations(allocations);
         Assert.assertEquals(Allocator.AllocationStatus.RETRIEVED, allocator.getAllocationStatus());
@@ -198,7 +204,8 @@ public class AllocatorTest {
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
 
-        Allocator allocator = new Allocator(mockConfig);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        Allocator allocator = new Allocator(mockConfig, participant);
         allocator.sandBagContamination();
         JsonArray actualAllocations = allocator.resolveAllocationFailure();
 
@@ -214,12 +221,14 @@ public class AllocatorTest {
         allocationsResponseFuture.set(rawAllocation);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
-        when(mockHttpClient.get(createAllocationsUrl(actualConfig))).thenReturn(allocationsResponseFuture);
+        AscendParticipant participant = AscendParticipant.builder().build();
+
+        when(mockHttpClient.get(createAllocationsUrl(actualConfig, participant))).thenReturn(allocationsResponseFuture);
         when(mockAllocationStore.get()).thenReturn(new JsonArray());
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
 
-        Allocator allocator = new Allocator(mockConfig);
+        Allocator allocator = new Allocator(mockConfig, participant);
         ListenableFuture<JsonArray> allocationsFuture = allocator.fetchAllocations();
 
         verify(mockAllocationStore, times(1)).get();
@@ -234,12 +243,14 @@ public class AllocatorTest {
         allocationsResponseFuture.set(rawAllocation);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
-        when(mockHttpClient.get(createAllocationsUrl(actualConfig))).thenReturn(allocationsResponseFuture);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
+        when(mockHttpClient.get(createAllocationsUrl(actualConfig, participant))).thenReturn(allocationsResponseFuture);
         when(mockAllocationStore.get()).thenReturn(allocations);
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
 
-        Allocator allocator = new Allocator(mockConfig);
+        Allocator allocator = new Allocator(mockConfig, participant);
         ListenableFuture<JsonArray> allocationsFuture = allocator.fetchAllocations();
 
         verify(mockAllocationStore, times(1)).get();

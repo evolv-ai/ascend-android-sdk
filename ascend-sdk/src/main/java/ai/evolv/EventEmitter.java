@@ -19,12 +19,12 @@ class EventEmitter {
 
     private final HttpClient httpClient;
     private final AscendConfig config;
-    private final AscendParticipant ascendParticipant;
+    private final AscendParticipant participant;
 
-    EventEmitter(AscendConfig config) {
+    EventEmitter(AscendConfig config, AscendParticipant participant) {
         this.httpClient = config.getHttpClient();
         this.config = config;
-        this.ascendParticipant = config.getAscendParticipant();
+        this.participant = participant;
     }
 
     void emit(String key) {
@@ -68,8 +68,8 @@ class EventEmitter {
                     config.getVersion(),
                     config.getEnvironmentId());
             String queryString = String.format("uid=%s&sid=%s&type=%s&score=%s",
-                    ascendParticipant.getUserId(),
-                    ascendParticipant.getSessionId(), type, score.toString());
+                    participant.getUserId(),
+                    participant.getSessionId(), type, score.toString());
 
             URI uri = new URI(config.getHttpScheme(), null, path, queryString,
                     null);
@@ -89,8 +89,8 @@ class EventEmitter {
                     config.getVersion(),
                     config.getEnvironmentId());
             String queryString = String.format("uid=%s&sid=%s&eid=%s&cid=%s&type=%s",
-                    ascendParticipant.getUserId(),
-                    ascendParticipant.getSessionId(), experimentId, candidateId, type);
+                    participant.getUserId(),
+                    participant.getSessionId(), experimentId, candidateId, type);
 
             URI uri = new URI(config.getHttpScheme(), null, path, queryString,
                     null);

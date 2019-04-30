@@ -5,31 +5,24 @@ public class AscendConfig {
     static final String DEFAULT_HTTP_SCHEME = "https";
     static final String DEFAULT_DOMAIN = "participants.evolv.ai";
     static final String DEFAULT_API_VERSION = "v1";
-    static final AscendAllocationStore DEFAULT_ALLOCATION_STORE =
-            new DefaultAscendAllocationStore();
-    static final AscendParticipant DEFAULT_ASCEND_PARTICIPANT =
-            new AscendParticipant.Builder().build();
 
     private final String httpScheme;
     private final String domain;
     private final String version;
     private final String environmentId;
     private final AscendAllocationStore ascendAllocationStore;
-    private final AscendParticipant ascendParticipant;
     private final HttpClient httpClient;
     private final ExecutionQueue executionQueue;
 
     private AscendConfig(String httpScheme, String domain, String version,
                          String environmentId,
                          AscendAllocationStore ascendAllocationStore,
-                         AscendParticipant ascendParticipant,
                          HttpClient httpClient) {
         this.httpScheme = httpScheme;
         this.domain = domain;
         this.version = version;
         this.environmentId = environmentId;
         this.ascendAllocationStore = ascendAllocationStore;
-        this.ascendParticipant = ascendParticipant;
         this.httpClient = httpClient;
         this.executionQueue = new ExecutionQueue();
     }
@@ -58,10 +51,6 @@ public class AscendConfig {
         return ascendAllocationStore;
     }
 
-    AscendParticipant getAscendParticipant() {
-        return ascendParticipant;
-    }
-
     HttpClient getHttpClient() {
         return this.httpClient;
     }
@@ -75,8 +64,7 @@ public class AscendConfig {
         private String httpScheme = DEFAULT_HTTP_SCHEME;
         private String domain = DEFAULT_DOMAIN;
         private String version = DEFAULT_API_VERSION;
-        private AscendAllocationStore ascendAllocationStore = DEFAULT_ALLOCATION_STORE;
-        private AscendParticipant ascendParticipant = DEFAULT_ASCEND_PARTICIPANT;
+        private AscendAllocationStore ascendAllocationStore = new DefaultAllocationStore();
 
         private String environmentId;
         private HttpClient httpClient;
@@ -95,8 +83,8 @@ public class AscendConfig {
         }
 
         /**
-         * Sets the domain of the underlying ascendParticipant api.
-         * @param domain the domain of the ascendParticipant api
+         * Sets the domain of the underlying participant api.
+         * @param domain the domain of the participant api
          * @return AscendClientBuilder class
          */
         public Builder setDomain(String domain) {
@@ -105,8 +93,8 @@ public class AscendConfig {
         }
 
         /**
-         * Version of the underlying ascendParticipant api.
-         * @param version representation of the required ascendParticipant api version
+         * Version of the underlying participant api.
+         * @param version representation of the required participant api version
          * @return AscendClientBuilder class
          */
         public Builder setVersion(String version) {
@@ -126,16 +114,6 @@ public class AscendConfig {
         }
 
         /**
-         * Sets up a custom AscendParticipant.
-         * @param ascendParticipant a custom build ascendParticipant
-         * @return AscendClientBuilder class
-         */
-        public Builder setAscendParticipant(AscendParticipant ascendParticipant) {
-            this.ascendParticipant = ascendParticipant;
-            return this;
-        }
-
-        /**
          * Tells the SDK to use either http or https.
          * @param scheme either http or https
          * @return AscendClientBuilder class
@@ -151,7 +129,7 @@ public class AscendConfig {
          */
         public AscendConfig build() {
             return new AscendConfig(httpScheme, domain, version,
-                    environmentId, ascendAllocationStore, ascendParticipant, httpClient);
+                    environmentId, ascendAllocationStore, httpClient);
         }
 
     }

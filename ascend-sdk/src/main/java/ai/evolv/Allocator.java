@@ -1,7 +1,5 @@
 package ai.evolv;
 
-import ai.evolv.exceptions.AscendRuntimeException;
-
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
@@ -35,14 +33,14 @@ class Allocator {
 
     private AllocationStatus allocationStatus;
 
-    Allocator(AscendConfig config) {
+    Allocator(AscendConfig config, AscendParticipant participant) {
         this.executionQueue = config.getExecutionQueue();
         this.store = config.getAscendAllocationStore();
         this.config = config;
-        this.ascendParticipant = config.getAscendParticipant();
+        this.ascendParticipant = participant;
         this.httpClient = config.getHttpClient();
         this.allocationStatus = AllocationStatus.FETCHING;
-        this.eventEmitter = new EventEmitter(config);
+        this.eventEmitter = new EventEmitter(config, participant);
 
     }
 

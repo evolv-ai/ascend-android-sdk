@@ -20,7 +20,8 @@ class AscendClientImpl implements AscendClient {
     private final boolean previousAllocations;
 
     AscendClientImpl(AscendConfig config, EventEmitter emitter,
-                     ListenableFuture<JsonArray> allocations, Allocator allocator,
+                     ListenableFuture<JsonArray> allocations,
+                     Allocator allocator,
                      boolean previousAllocations) {
         this.store = config.getAscendAllocationStore();
         this.executionQueue = config.getExecutionQueue();
@@ -63,6 +64,9 @@ class AscendClientImpl implements AscendClient {
                 LOGGER.warn(String.format("There was an error retrieving the value of %s from the allocation.",
                         execution.getKey()), e);
                 execution.executeWithDefault();
+            } catch (Exception e) {
+                LOGGER.error("There was an issue while performing one of" +
+                        " the stored actions.", e);
             }
         }
 
@@ -78,10 +82,19 @@ class AscendClientImpl implements AscendClient {
             } catch (AscendKeyError e) {
                 LOGGER.warn(String.format("There was an error retrieving the value of %s from the allocation.",
                         execution.getKey()), e);
+            } catch (Exception e) {
+                LOGGER.error("There was an issue while performing one of" +
+                        " the stored actions.", e);
+                return;
             }
         }
 
-        execution.executeWithDefault();
+        try {
+            execution.executeWithDefault();
+        } catch (Exception e) {
+            LOGGER.error("There was an issue while performing one of" +
+                    " the stored actions.", e);
+        }
     }
 
     @Override
