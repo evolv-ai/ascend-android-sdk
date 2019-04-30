@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 class EventEmitter {
 
-    private static Logger logger = LoggerFactory.getLogger(ExecutionQueue.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionQueue.class);
 
     static final String CONFIRM_KEY = "confirmation";
     static final String CONTAMINATE_KEY = "contamination";
@@ -78,7 +78,7 @@ class EventEmitter {
 
             return url.toString();
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            LOGGER.error("There was an error while creating the event url.", e);
             return null;
         }
     }
@@ -99,7 +99,7 @@ class EventEmitter {
 
             return url.toString();
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            LOGGER.error("There was an error while creating the event url.", e);
             return null;
         }
     }

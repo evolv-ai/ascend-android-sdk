@@ -19,7 +19,7 @@ public class AscendClientFactory {
      * @return an instance of AscendClient
      */
     public static AscendClient init(AscendConfig config) {
-        LOGGER.info("Initializing Ascend Client.");
+        LOGGER.debug("Initializing Ascend Client.");
 
         AscendAllocationStore store = config.getAscendAllocationStore();
         Allocator allocator = new Allocator(config);

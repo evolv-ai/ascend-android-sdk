@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 class Allocator {
 
-    private static Logger logger = LoggerFactory.getLogger(Allocator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Allocator.class);
 
     enum AllocationStatus {
         FETCHING, RETRIEVED, FAILED
@@ -70,7 +70,7 @@ class Allocator {
 
             return url.toString();
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            LOGGER.error("There was an error while creating the allocations url.", e);
             return "";
         }
     }
@@ -103,17 +103,9 @@ class Allocator {
                     }
 
                     allocationsFuture.set(allocations);
-
-                    // could throw an exception due to customer's action logic
-                    try {
-                        executionQueue.executeAllWithValuesFromAllocations(allocations);
-                    } catch (Exception e) {
-                        throw new AscendRuntimeException(e);
-                    }
-                } catch (AscendRuntimeException e){
-                    logger.error(e.getMessage());
+                    executionQueue.executeAllWithValuesFromAllocations(allocations);
                 } catch (Exception e) {
-                    logger.warn(e.getMessage());
+                    LOGGER.warn("There was a failure while retrieving the allocations.", e);
                     allocationsFuture.set(resolveAllocationFailure());
                 }
             }
@@ -123,11 +115,9 @@ class Allocator {
     }
 
     JsonArray resolveAllocationFailure() {
-        logger.warn("There was an error while making an allocation request.");
-
         JsonArray allocations = store.get();
         if (allocationsNotEmpty(allocations)) {
-            logger.warn("Falling back to participant's previous allocation.");
+            LOGGER.debug("Falling back to participant's previous allocation.");
 
             if (confirmationSandbagged) {
                 eventEmitter.confirm(allocations);
@@ -140,7 +130,7 @@ class Allocator {
             allocationStatus = AllocationStatus.RETRIEVED;
             executionQueue.executeAllWithValuesFromAllocations(allocations);
         } else {
-            logger.warn("Falling back to the supplied defaults.");
+            LOGGER.debug("Falling back to the supplied defaults.");
 
             allocationStatus = AllocationStatus.FAILED;
             executionQueue.executeAllWithValuesFromDefaults();

@@ -60,8 +60,8 @@ class AscendClientImpl implements AscendClient {
                 JsonArray allocations = store.get();
                 execution.executeWithAllocation(allocations);
             } catch (AscendKeyError e) {
-                LOGGER.warn("There was an error retrieving the value of %s from the allocation.",
-                        execution.getKey());
+                LOGGER.warn(String.format("There was an error retrieving the value of %s from the allocation.",
+                        execution.getKey()), e);
                 execution.executeWithDefault();
             }
         }
@@ -76,8 +76,8 @@ class AscendClientImpl implements AscendClient {
                 execution.executeWithAllocation(allocations);
                 return;
             } catch (AscendKeyError e) {
-                LOGGER.warn("There was an error retrieving the value of %s from the allocation.",
-                        execution.getKey());
+                LOGGER.warn(String.format("There was an error retrieving the value of %s from the allocation.",
+                        execution.getKey()), e);
             }
         }
 
