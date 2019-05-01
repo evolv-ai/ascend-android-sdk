@@ -37,10 +37,6 @@ public class AscendClientFactory {
     private static AscendClient createClient(AscendConfig config, AscendParticipant participant) {
         AscendAllocationStore store = config.getAscendAllocationStore();
         JsonArray previousAllocations = store.get(participant.getUserId());
-        boolean reconciliationNeeded = false;
-        if (Allocator.allocationsNotEmpty(previousAllocations)) {
-            reconciliationNeeded = true;
-        }
 
         Allocator allocator = new Allocator(config, participant);
 
@@ -51,7 +47,7 @@ public class AscendClientFactory {
                 new EventEmitter(config, participant),
                 futureAllocations,
                 allocator,
-                reconciliationNeeded,
+                Allocator.allocationsNotEmpty(previousAllocations),
                 participant);
     }
 }
