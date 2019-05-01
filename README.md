@@ -8,6 +8,18 @@
 
 For a complete example of how to use this SDK see our [example app](https://github.com/evolv-ai/ascend-android-sdk/blob/master/example/src/main/java/ai/evolv/ascend/example/MainActivity.java).
 
+### Import the SDK
+
+1. Import the Ascend SDK.
+
+    ```xml
+        <dependency>
+          <groupId>ai.evolv</groupId>
+          <artifactId>ascend-android-sdk</artifactId>
+          <version>0.5.0</version>
+        </dependency>
+    ```
+
 ### Client Initialization
 
 1. Build an AscendConfig instance.
