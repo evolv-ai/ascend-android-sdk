@@ -59,7 +59,7 @@ public class OkHttpClient implements HttpClient {
      * Performs a GET request with the given url using the httpClient from
      * okhttp3.
      * @param url a valid url representing a call to the Participant API.
-     * @return a Completable future instance containing a response from
+     * @return a Listenable future instance containing a response from
      *     the API
      */
     public ListenableFuture<String> get(String url) {

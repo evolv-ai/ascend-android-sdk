@@ -3,22 +3,25 @@ package ai.evolv.utils;
 import ai.evolv.AscendAllocationStore;
 import com.google.gson.JsonArray;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MockAllocationStore implements AscendAllocationStore {
 
-    private JsonArray allocations;
+    private final Map<String, JsonArray> allocations;
 
-    public MockAllocationStore(JsonArray allocations) {
-        this.allocations = allocations;
+    MockAllocationStore() {
+        this.allocations = new HashMap<>();
     }
 
     @Override
-    public JsonArray get() {
-        return allocations;
+    public JsonArray get(String userId) {
+        return allocations.get(userId);
     }
 
     @Override
-    public void put(JsonArray allocations) {
-        this.allocations = allocations;
+    public void put(String userId, JsonArray allocations) {
+        this.allocations.put(userId, allocations);
     }
 
 }

@@ -18,17 +18,20 @@ class AscendClientImpl implements AscendClient {
     private final Allocator allocator;
     private final AscendAllocationStore store;
     private final boolean previousAllocations;
+    private final AscendParticipant participant;
 
     AscendClientImpl(AscendConfig config, EventEmitter emitter,
                      ListenableFuture<JsonArray> allocations,
                      Allocator allocator,
-                     boolean previousAllocations) {
+                     boolean previousAllocations,
+                     AscendParticipant participant) {
         this.store = config.getAscendAllocationStore();
         this.executionQueue = config.getExecutionQueue();
         this.eventEmitter = emitter;
         this.futureAllocations = allocations;
         this.allocator = allocator;
         this.previousAllocations = previousAllocations;
+        this.participant = participant;
     }
 
     @Override
@@ -58,7 +61,7 @@ class AscendClientImpl implements AscendClient {
         Execution execution = new Execution<>(key, defaultValue, function);
         if (previousAllocations) {
             try {
-                JsonArray allocations = store.get();
+                JsonArray allocations = store.get(participant.getUserId());
                 execution.executeWithAllocation(allocations);
             } catch (AscendKeyError e) {
                 LOGGER.warn(String.format("There was an error retrieving the value of %s from the allocation.",
@@ -76,7 +79,7 @@ class AscendClientImpl implements AscendClient {
             return;
         } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED) {
             try {
-                JsonArray allocations = store.get();
+                JsonArray allocations = store.get(participant.getUserId());
                 execution.executeWithAllocation(allocations);
                 return;
             } catch (AscendKeyError e) {
@@ -113,7 +116,7 @@ class AscendClientImpl implements AscendClient {
         if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
             allocator.sandBagConfirmation();
         } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED) {
-            eventEmitter.confirm(store.get());
+            eventEmitter.confirm(store.get(participant.getUserId()));
         }
     }
 
@@ -123,7 +126,7 @@ class AscendClientImpl implements AscendClient {
         if (allocationStatus == Allocator.AllocationStatus.FETCHING) {
             allocator.sandBagContamination();
         } else if (allocationStatus == Allocator.AllocationStatus.RETRIEVED) {
-            eventEmitter.contaminate(store.get());
+            eventEmitter.contaminate(store.get(participant.getUserId()));
         }
     }
 }

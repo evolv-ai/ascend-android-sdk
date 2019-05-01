@@ -5,7 +5,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import ai.evolv.HttpClient;
 
-import java.util.concurrent.CompletableFuture;
 
 public class MockHttpClient implements HttpClient {
 

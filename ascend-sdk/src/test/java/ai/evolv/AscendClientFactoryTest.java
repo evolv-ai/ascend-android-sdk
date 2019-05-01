@@ -14,7 +14,6 @@ import static org.mockito.Mockito.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.concurrent.CompletableFuture;
 
 public class AscendClientFactoryTest {
 
@@ -78,13 +77,13 @@ public class AscendClientFactoryTest {
         when(mockHttpClient.get(anyString())).thenReturn(responseFuture);
 
         AscendClient client = AscendClientFactory.init(mockConfig);
-        verify(mockAllocationStore, times(2)).get();
+        verify(mockAllocationStore, times(2)).get(anyString());
         Assert.assertTrue(client instanceof AscendClient);
     }
 
     @Test
     public void testClientInitSameUser() {
-        AscendParticipant participant = AscendParticipant.builder().build();
+        AscendParticipant participant = AscendParticipant.builder().setUserId("test_uid").build();
         HttpClient mockClient = new MockHttpClient(rawAllocation);
 
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
@@ -93,10 +92,10 @@ public class AscendClientFactoryTest {
 
         JsonArray previousAllocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         String previousUid = previousAllocations.get(0).getAsJsonObject().get("uid").getAsString();
-        when(mockAllocationStore.get()).thenReturn(previousAllocations);
+        when(mockAllocationStore.get(participant.getUserId())).thenReturn(previousAllocations);
 
         AscendClient client = AscendClientFactory.init(mockConfig, participant);
-        verify(mockAllocationStore, times(2)).get();
+        verify(mockAllocationStore, times(2)).get(participant.getUserId());
         Assert.assertTrue(client instanceof AscendClient);
         Assert.assertEquals(previousUid, participant.getUserId());
     }

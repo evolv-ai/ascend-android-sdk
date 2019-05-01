@@ -2,21 +2,24 @@ package ai.evolv;
 
 import com.google.gson.JsonArray;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DefaultAllocationStore implements AscendAllocationStore {
 
-    private static JsonArray allocations;
+    private final Map<String, JsonArray> allocations;
 
     DefaultAllocationStore() {
-        this.allocations = new JsonArray();
+        this.allocations = new HashMap<>();
     }
 
     @Override
-    public JsonArray get() {
-        return allocations;
+    public JsonArray get(String userId) {
+        return allocations.get(userId);
     }
 
     @Override
-    public void put(JsonArray allocations) {
-        this.allocations = allocations;
+    public void put(String userId, JsonArray allocations) {
+        this.allocations.put(userId, allocations);
     }
 }

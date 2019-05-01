@@ -24,7 +24,7 @@ class Allocator {
     private final ExecutionQueue executionQueue;
     private final AscendAllocationStore store;
     private final AscendConfig config;
-    private final AscendParticipant ascendParticipant;
+    private final AscendParticipant participant;
     private final EventEmitter eventEmitter;
     private final HttpClient httpClient;
 
@@ -37,7 +37,7 @@ class Allocator {
         this.executionQueue = config.getExecutionQueue();
         this.store = config.getAscendAllocationStore();
         this.config = config;
-        this.ascendParticipant = participant;
+        this.participant = participant;
         this.httpClient = config.getHttpClient();
         this.allocationStatus = AllocationStatus.FETCHING;
         this.eventEmitter = new EventEmitter(config, participant);
@@ -61,8 +61,8 @@ class Allocator {
             String path = String.format("//%s/%s/%s/allocations", config.getDomain(),
                     config.getVersion(),
                     config.getEnvironmentId());
-            String queryString = String.format("uid=%s&sid=%s", ascendParticipant.getUserId(),
-                    ascendParticipant.getSessionId());
+            String queryString = String.format("uid=%s&sid=%s", participant.getUserId(),
+                    participant.getSessionId());
             URI uri = new URI(config.getHttpScheme(), null, path, queryString, null);
             URL url = uri.toURL();
 
@@ -84,12 +84,12 @@ class Allocator {
                     JsonParser parser = new JsonParser();
                     JsonArray allocations = parser.parse(responseFuture.get()).getAsJsonArray();
 
-                    JsonArray previousAllocations = store.get();
+                    JsonArray previousAllocations = store.get(participant.getUserId());
                     if (allocationsNotEmpty(previousAllocations)) {
                         allocations = Allocations.reconcileAllocations(previousAllocations, allocations);
                     }
 
-                    store.put(allocations);
+                    store.put(participant.getUserId(), allocations);
                     allocationStatus = AllocationStatus.RETRIEVED;
 
                     if (confirmationSandbagged) {
@@ -113,7 +113,7 @@ class Allocator {
     }
 
     JsonArray resolveAllocationFailure() {
-        JsonArray allocations = store.get();
+        JsonArray allocations = store.get(participant.getUserId());
         if (allocationsNotEmpty(allocations)) {
             LOGGER.debug("Falling back to participant's previous allocation.");
 

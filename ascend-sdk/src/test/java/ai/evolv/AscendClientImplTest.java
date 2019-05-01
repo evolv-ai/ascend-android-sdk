@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.*;
 
@@ -74,12 +73,13 @@ public class AscendClientImplTest {
 
     @Test
     public void testGetReturnsDefaultsUponNullFuture() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, null, mockAllocator,
-                false);
+                false, participant);
         Double expectedValue = .001;
         Double result = client.get("search.weighting.distance", expectedValue);
         Assert.assertEquals(expectedValue, result);
@@ -87,6 +87,7 @@ public class AscendClientImplTest {
 
     @Test
     public void testGetReturnsDefaultsUponEmptyAllocations() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
@@ -96,7 +97,7 @@ public class AscendClientImplTest {
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         Double expectedValue = .001;
         Double result = client.get("search.weighting.distance", expectedValue);
         Assert.assertEquals(expectedValue, result);
@@ -105,6 +106,7 @@ public class AscendClientImplTest {
 
     @Test
     public void testGetReturnsDefaultsUponException() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
@@ -114,7 +116,7 @@ public class AscendClientImplTest {
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         Double expectedValue = .001;
         Double result = client.get("not.a.real.key", expectedValue);
         Assert.assertEquals(expectedValue, result);
@@ -122,6 +124,7 @@ public class AscendClientImplTest {
 
     @Test
     public void testGetValueSuccess() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
@@ -131,7 +134,7 @@ public class AscendClientImplTest {
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         Double result = client.get("search.weighting.distance", .001);
         Double expected = 2.5;
         Assert.assertEquals(expected, result);
@@ -139,6 +142,7 @@ public class AscendClientImplTest {
 
     @Test
     public void testEmitEventWithScore() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
@@ -148,7 +152,7 @@ public class AscendClientImplTest {
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         String key = "testKey";
         Double score = 1.3;
         client.emitEvent(key, score);
@@ -158,6 +162,7 @@ public class AscendClientImplTest {
 
     @Test
     public void testEmitEvent() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
@@ -167,7 +172,7 @@ public class AscendClientImplTest {
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         String key = "testKey";
         client.emitEvent(key);
 
@@ -176,6 +181,7 @@ public class AscendClientImplTest {
 
     @Test
     public void testConfirmEventSandBagged() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
@@ -186,7 +192,7 @@ public class AscendClientImplTest {
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         client.confirm();
 
         verify(mockAllocator, times(1)).sandBagConfirmation();
@@ -194,18 +200,19 @@ public class AscendClientImplTest {
 
     @Test
     public void testConfirmEvent() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.RETRIEVED);
-        when(mockAllocationStore.get()).thenReturn(allocations);
+        when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         client.confirm();
 
         verify(mockEventEmitter, times(1)).confirm(allocations);
@@ -213,6 +220,7 @@ public class AscendClientImplTest {
 
     @Test
     public void testContaminateEventSandBagged() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
@@ -223,7 +231,7 @@ public class AscendClientImplTest {
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         client.contaminate();
 
         verify(mockAllocator, times(1)).sandBagContamination();
@@ -231,18 +239,19 @@ public class AscendClientImplTest {
 
     @Test
     public void testContaminateEvent() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.RETRIEVED);
-        when(mockAllocationStore.get()).thenReturn(allocations);
+        when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
         client.contaminate();
 
         verify(mockEventEmitter, times(1)).contaminate(allocations);
@@ -250,18 +259,19 @@ public class AscendClientImplTest {
 
     @Test
     public void testSubscribeNoPreviousAllocationsWithFetchingState() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.FETCHING);
-        when(mockAllocationStore.get()).thenReturn(allocations);
+        when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
 
         Double expectedTestValue = 0.0;
         Assert.assertEquals(expectedTestValue, testValue);
@@ -278,18 +288,19 @@ public class AscendClientImplTest {
 
     @Test
     public void testSubscribeNoPreviousAllocationsWithRetrievedState() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.RETRIEVED);
-        when(mockAllocationStore.get()).thenReturn(allocations);
+        when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
 
         Double expectedTestValue = 0.0;
         Assert.assertEquals(expectedTestValue, testValue);
@@ -298,7 +309,7 @@ public class AscendClientImplTest {
             testValue = value;
         });
 
-        verify(mockAllocationStore, times(1)).get();
+        verify(mockAllocationStore, times(1)).get(participant.getUserId());
 
         Double expected = 2.5;
         Assert.assertEquals(expected, testValue);
@@ -308,18 +319,19 @@ public class AscendClientImplTest {
 
     @Test
     public void testSubscribeNoPreviousAllocationsWithFailedState() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.FAILED);
-        when(mockAllocationStore.get()).thenReturn(allocations);
+        when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
 
         Double expectedTestValue = 0.0;
         Assert.assertEquals(expectedTestValue, testValue);
@@ -336,18 +348,19 @@ public class AscendClientImplTest {
 
     @Test
     public void testSubscribeNoPreviousAllocationsWithRetrievedStateThrowsError() {
+        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.RETRIEVED);
-        when(mockAllocationStore.get()).thenReturn(allocations);
+        when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         allocationsFuture.set(allocations);
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, allocationsFuture, mockAllocator,
-                false);
+                false, participant);
 
         Double expectedTestValue = 0.0;
         Assert.assertEquals(expectedTestValue, testValue);

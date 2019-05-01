@@ -1,7 +1,9 @@
 package ai.evolv.ascend.example;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import ai.evolv.AscendAllocationStore;
 
@@ -11,21 +13,20 @@ public class CustomAllocationStore implements AscendAllocationStore {
      sqlLite or an application storage implementation instead.
      */
 
-    private JsonArray allocations;
+    private final Map<String, JsonArray> allocations;
 
-    CustomAllocationStore(String rawAllocations) {
-        JsonParser jsonParser = new JsonParser();
-        this.allocations = jsonParser.parse(rawAllocations).getAsJsonArray();
+    CustomAllocationStore() {
+        this.allocations = new HashMap<>();
     }
 
     @Override
-    public JsonArray get() {
-        return allocations;
+    public JsonArray get(String userId) {
+        return allocations.get(userId);
     }
 
     @Override
-    public void put(JsonArray allocations) {
-        this.allocations = allocations;
+    public void put(String userId, JsonArray allocations) {
+        this.allocations.put(userId, allocations);
     }
 
 }
