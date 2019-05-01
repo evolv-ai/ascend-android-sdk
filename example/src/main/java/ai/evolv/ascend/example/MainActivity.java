@@ -71,8 +71,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         client.confirm();
-
-        JsonArray frazersArray = store.get("sandbox_user");
     }
 
     public void pressCheckout(View view) {
