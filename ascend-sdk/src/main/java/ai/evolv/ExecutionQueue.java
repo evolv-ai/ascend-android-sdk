@@ -1,17 +1,17 @@
 package ai.evolv;
 
+import ai.evolv.exceptions.AscendKeyError;
+
 import com.google.gson.JsonArray;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import ai.evolv.exceptions.AscendKeyError;
-
 class ExecutionQueue {
 
-    private static Logger logger = LoggerFactory.getLogger(ExecutionQueue.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionQueue.class);
 
     private final ConcurrentLinkedQueue<Execution> queue;
 
@@ -29,8 +29,12 @@ class ExecutionQueue {
             try {
                 execution.executeWithAllocation(allocations);
             } catch (AscendKeyError e) {
-                logger.warn("There was an error retrieving the value of %s from the allocation.",
-                        execution.getKey());
+                LOGGER.warn(String.format("There was an error retrieving the value of %s from the allocation.",
+                        execution.getKey()), e);
+                execution.executeWithDefault();
+            } catch (Exception e) {
+                LOGGER.error("There was an issue while performing one of" +
+                        " the stored actions.", e);
             }
         }
     }
@@ -38,7 +42,12 @@ class ExecutionQueue {
     void executeAllWithValuesFromDefaults() {
         while (!queue.isEmpty()) {
             Execution execution = queue.remove();
-            execution.executeWithDefault();
+            try {
+                execution.executeWithDefault();
+            } catch (Exception e) {
+                LOGGER.error("There was an issue while performing one of" +
+                        " the stored actions.", e);
+            }
         }
     }
 

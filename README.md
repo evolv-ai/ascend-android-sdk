@@ -8,11 +8,23 @@
 
 For a complete example of how to use this SDK see our [example app](https://github.com/evolv-ai/ascend-android-sdk/blob/master/example/src/main/java/ai/evolv/ascend/example/MainActivity.java).
 
+### Import the SDK
+
+1. Import the Ascend SDK.
+
+    ```xml
+        <dependency>
+          <groupId>ai.evolv</groupId>
+          <artifactId>ascend-android-sdk</artifactId>
+          <version>0.5.0</version>
+        </dependency>
+    ```
+
 ### Client Initialization
 
 1. Build an AscendConfig instance.
     ```java
-       AscendConfig config = AscendConfig.builder(<environment_id>).build();
+       AscendConfig config = AscendConfig.builder(<environment_id>, <http_client>).build();
     ```
 
 2. Initialize the AscendClient.
@@ -104,17 +116,6 @@ custom allocation store to the client when you build the AscendConfig.
 There are several optional configurations available through the AscendConfig builder, check out the AscendConfig
 documentation to see what options are available.
 
-### Get the .jar
-
-This SDK can also be used in your Java application. To retrieve the .jar:
-
-1. Run the "createJar" gradle command in the top level directory.
-    ```
-    ./gradlew createJar
-    ```
-    
-2. Retrieve the jar from ascend-sdk/build/outputs/ascend-sdk.jar and place it in your
-   project.
 
 ### About Evolv and the Ascend Product
 

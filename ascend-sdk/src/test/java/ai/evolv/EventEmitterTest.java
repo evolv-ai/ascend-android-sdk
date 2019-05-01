@@ -1,5 +1,8 @@
 package ai.evolv;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -8,8 +11,6 @@ import org.junit.Test;
 import static org.mockito.Mockito.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import okhttp3.HttpUrl;
 
 public class EventEmitterTest {
 
@@ -24,7 +25,13 @@ public class EventEmitterTest {
     private AscendConfig mockConfig;
 
     @Mock
-    private HttpParticipantClient mockParticipantClient;
+    private ExecutionQueue mockExecutionQueue;
+
+    @Mock
+    private HttpClient mockHttpClient;
+
+    @Mock
+    private AscendAllocationStore mockAllocationStore;
 
     @Before
     public void setUp() {
@@ -36,128 +43,149 @@ public class EventEmitterTest {
         if (mockConfig != null) {
             mockConfig = null;
         }
-        if (mockParticipantClient != null) {
-            mockParticipantClient = null;
+
+        if (mockExecutionQueue != null) {
+            mockExecutionQueue = null;
+        }
+
+        if (mockHttpClient != null) {
+            mockHttpClient = null;
+        }
+
+        if (mockAllocationStore != null) {
+            mockAllocationStore = null;
         }
     }
 
-    private HttpUrl createEventsUrl(AscendConfig config, String type, double score) {
-        return new HttpUrl.Builder()
-                .scheme(config.getHttpScheme())
-                .host(config.getDomain())
-                .addPathSegment(config.getVersion())
-                .addPathSegment(config.getEnvironmentId())
-                .addPathSegment("events")
-                .addQueryParameter("uid", config.getAscendParticipant().getUserId())
-                .addQueryParameter("sid", config.getAscendParticipant().getSessionId())
-                .addQueryParameter("type", type)
-                .addQueryParameter("score", Double.toString(score))
-                .build();
+
+    static String createAllocationEventUrl(AscendConfig config, JsonObject allocation, String event,
+                                           AscendParticipant participant) {
+        return String.format("%s://%s/%s/%s/events?uid=%s&sid=%s&eid=%s&cid=%s&type=%s",
+                config.getHttpScheme(),
+                config.getDomain(),
+                config.getVersion(),
+                config.getEnvironmentId(),
+                participant.getUserId(),
+                participant.getSessionId(),
+                allocation.get("eid").getAsString(),
+                allocation.get("cid").getAsString(),
+                event);
     }
 
-    private HttpUrl createEventsUrl(AscendConfig config, String type, String eid, String cid) {
-        return new HttpUrl.Builder()
-                .scheme(config.getHttpScheme())
-                .host(config.getDomain())
-                .addPathSegment(config.getVersion())
-                .addPathSegment(config.getEnvironmentId())
-                .addPathSegment("events")
-                .addQueryParameter("uid", config.getAscendParticipant().getUserId())
-                .addQueryParameter("sid", config.getAscendParticipant().getSessionId())
-                .addQueryParameter("eid", eid)
-                .addQueryParameter("cid", cid)
-                .addQueryParameter("type", type)
-                .build();
+    private String createEventsUrl(AscendConfig config, String type, Double score,
+                                   AscendParticipant participant) {
+        return String.format("%s://%s/%s/%s/events?uid=%s&sid=%s&type=%s&score=%s",
+                config.getHttpScheme(),
+                config.getDomain(),
+                config.getVersion(),
+                config.getEnvironmentId(),
+                participant.getUserId(),
+                participant.getSessionId(),
+                type, score.toString());
     }
 
     @Test
     public void testGetEventUrl() {
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
+        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
+                mockExecutionQueue, mockHttpClient, mockAllocationStore);
 
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, mockParticipantClient,
-                actualConfig);
-
-        EventEmitter emitter = new EventEmitter(mockConfig);
-        HttpUrl url = emitter.getEventUrl(type, score);
-        Assert.assertEquals(createEventsUrl(actualConfig, type, score), url);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        EventEmitter emitter = new EventEmitter(mockConfig, participant);
+        String url = emitter.getEventUrl(type, score);
+        Assert.assertEquals(createEventsUrl(actualConfig, type, score, participant), url);
     }
 
     @Test
     public void testGetEventUrlWithEidAndCid() {
+        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
+                mockHttpClient, mockAllocationStore);
+        JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
 
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, mockParticipantClient,
-                actualConfig);
-
-        EventEmitter emitter = new EventEmitter(mockConfig);
-        HttpUrl url = emitter.getEventUrl(type, eid, cid);
-        Assert.assertEquals(createEventsUrl(actualConfig, type, eid, cid), url);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        EventEmitter emitter = new EventEmitter(mockConfig, participant);
+        String url = emitter.getEventUrl(type, eid, cid);
+        Assert.assertEquals(createAllocationEventUrl(actualConfig,
+                allocations.get(0).getAsJsonObject(), type, participant), url);
     }
 
     @Test
     public void testSendAllocationEvents() {
+        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
+                mockHttpClient, mockAllocationStore);
+        JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
 
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, mockParticipantClient,
-                actualConfig);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        EventEmitter emitter = new EventEmitter(mockConfig, participant);
+        emitter.sendAllocationEvents(type, allocations);
 
-        EventEmitter emitter = new EventEmitter(mockConfig);
-        emitter.sendAllocationEvents(type, new AllocationsTest().parseRawAllocations(rawAllocation));
-
-        verify(mockParticipantClient, times(1))
-                .executeGetRequest(createEventsUrl(actualConfig, type, eid, cid));
+        verify(mockHttpClient, times(1))
+                .get(createAllocationEventUrl(actualConfig, allocations.get(0).getAsJsonObject(),
+                        type, participant));
     }
 
     @Test
     public void testContaminateEvent() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, mockParticipantClient,
-                actualConfig);
+        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
+                mockHttpClient, mockAllocationStore);
+        JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
 
-        EventEmitter emitter = new EventEmitter(mockConfig);
-        emitter.contaminate(new AllocationsTest().parseRawAllocations(rawAllocation));
+        AscendParticipant participant = AscendParticipant.builder().build();
+        EventEmitter emitter = new EventEmitter(mockConfig, participant);
+        emitter.contaminate(allocations);
 
-        verify(mockParticipantClient, times(1))
-                .executeGetRequest(createEventsUrl(actualConfig, EventEmitter.CONTAMINATE_KEY, eid, cid));
+        verify(mockHttpClient, times(1))
+                .get(createAllocationEventUrl(actualConfig, allocations.get(0).getAsJsonObject(),
+                        EventEmitter.CONTAMINATE_KEY, participant));
     }
 
     @Test
     public void testConfirmEvent() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, mockParticipantClient,
-                actualConfig);
+        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
+                mockHttpClient, mockAllocationStore);
+        JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
 
-        EventEmitter emitter = new EventEmitter(mockConfig);
-        emitter.confirm(new AllocationsTest().parseRawAllocations(rawAllocation));
+        AscendParticipant participant = AscendParticipant.builder().build();
+        EventEmitter emitter = new EventEmitter(mockConfig, participant);
+        emitter.confirm(allocations);
 
-        verify(mockParticipantClient, times(1))
-                .executeGetRequest(createEventsUrl(actualConfig, EventEmitter.CONFIRM_KEY, eid, cid));
+        verify(mockHttpClient, times(1))
+                .get(createAllocationEventUrl(actualConfig, allocations.get(0).getAsJsonObject(),
+                        EventEmitter.CONFIRM_KEY, participant));
     }
 
     @Test
     public void testGenericEvent() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, mockParticipantClient,
-                actualConfig);
+        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
+                mockHttpClient, mockAllocationStore);
+        JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
 
-        EventEmitter emitter = new EventEmitter(mockConfig);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        EventEmitter emitter = new EventEmitter(mockConfig, participant);
         emitter.emit(type);
 
-        verify(mockParticipantClient, times(1))
-                .executeGetRequest(createEventsUrl(actualConfig, type, 1.0));
+        verify(mockHttpClient, times(1))
+                .get(createEventsUrl(actualConfig, type, 1.0, participant));
     }
 
     @Test
     public void testGenericEventWithScore() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId).build();
-        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, mockParticipantClient,
-                actualConfig);
+        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
+                mockHttpClient, mockAllocationStore);
+        JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
 
-        EventEmitter emitter = new EventEmitter(mockConfig);
+        AscendParticipant participant = AscendParticipant.builder().build();
+        EventEmitter emitter = new EventEmitter(mockConfig, participant);
         emitter.emit(type, score);
 
-        verify(mockParticipantClient, times(1))
-                .executeGetRequest(createEventsUrl(actualConfig, type, score));
+        verify(mockHttpClient, times(1))
+                .get(createEventsUrl(actualConfig, type, score, participant));
     }
 
 

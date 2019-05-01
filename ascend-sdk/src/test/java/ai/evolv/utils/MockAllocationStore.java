@@ -1,21 +1,16 @@
-package ai.evolv.ascend.example;
+package ai.evolv.utils;
 
+import ai.evolv.AscendAllocationStore;
 import com.google.gson.JsonArray;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import ai.evolv.AscendAllocationStore;
-
-public class CustomAllocationStore implements AscendAllocationStore {
-    /*
-     A custom in memory allocation store, this is a very basic example. One would likely use
-     sqlLite or an application storage implementation instead.
-     */
+public class MockAllocationStore implements AscendAllocationStore {
 
     private final Map<String, JsonArray> allocations;
 
-    CustomAllocationStore() {
+    MockAllocationStore() {
         this.allocations = new HashMap<>();
     }
 

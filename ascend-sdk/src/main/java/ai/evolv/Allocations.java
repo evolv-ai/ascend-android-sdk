@@ -1,5 +1,7 @@
 package ai.evolv;
 
+import ai.evolv.exceptions.AscendKeyError;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -10,8 +12,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import ai.evolv.exceptions.AscendKeyError;
 
 class Allocations {
 
@@ -27,10 +27,10 @@ class Allocations {
         for (String part : keyParts) {
             JsonObject jsonObject = value.getAsJsonObject();
             value = jsonObject.get(part);
-        }
 
-        if (value == null) {
-            throw new AscendKeyError("Could not find value for key:" + key);
+            if (value == null) {
+                throw new AscendKeyError("Could not find value for key:" + key);
+            }
         }
 
         Gson gson = new Gson();
@@ -42,7 +42,7 @@ class Allocations {
         for (JsonElement allocation : allocations) {
             JsonObject originalGenome = allocation.getAsJsonObject().getAsJsonObject("genome");
             Set<Map.Entry<String, JsonElement>> entrySet = originalGenome.entrySet();
-            for(Map.Entry<String, JsonElement> entry : entrySet){
+            for (Map.Entry<String, JsonElement> entry : entrySet) {
                 genome.add(entry.getKey(), originalGenome.get(entry.getKey()));
             }
         }
@@ -55,16 +55,18 @@ class Allocations {
      * Reconciles the previous allocations with any new allocations.
      *
      * <p>
-     *     Check the current allocations for any allocations that belong to experiments in the previous
-     *     allocations. If there are, keep the previous allocations. If there are any live experiments
-     *     that are not in the previous allocations add the new allocation to the allocations list.
+     *     Check the current allocations for any allocations that belong to experiments
+     *     in the previous allocations. If there are, keep the previous allocations.
+     *     If there are any live experiments that are not in the previous allocations
+     *     add the new allocation to the allocations list.
      * </p>
      *
      * @param previousAllocations the stored allocations
      * @param currentAllocations the allocations recently fetched
      * @return the reconcile allocations
      */
-    static JsonArray reconcileAllocations(JsonArray previousAllocations, JsonArray currentAllocations) {
+    static JsonArray reconcileAllocations(JsonArray previousAllocations,
+                                          JsonArray currentAllocations) {
         JsonArray allocations = new JsonArray();
 
         for (JsonElement ca : currentAllocations) {

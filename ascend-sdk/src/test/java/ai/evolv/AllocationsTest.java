@@ -8,6 +8,9 @@ import org.junit.Test;
 
 import ai.evolv.exceptions.AscendKeyError;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class AllocationsTest {
 
     private static final String rawAllocation = "[{\"uid\":\"test_uid\",\"sid\":\"test_sid\",\"eid\":\"test_eid\",\"cid\":\"test_cid\",\"genome\":{\"search\":{\"weighting\":{\"distance\":2.5,\"dealer_score\":2.5}},\"pages\":{\"all_pages\":{\"header_footer\":[\"blue\",\"white\"]},\"testing_page\":{\"megatron\":\"none\",\"header\":\"white\"}},\"algorithms\":{\"feature_importance\":false}},\"excluded\":false}]";
@@ -85,5 +88,16 @@ public class AllocationsTest {
             Assert.fail(e.getMessage());
         }
     }
+
+    @Test
+    public void testGetActiveExperiments() {
+        Allocations allocations = new Allocations(parseRawAllocations(rawMultiAllocation));
+        Set<String> activeExperiments = allocations.getActiveExperiments();
+        Set<String> expected = new HashSet<>();
+        expected.add("test_eid");
+        expected.add("test_eid_2");
+        Assert.assertEquals(expected, activeExperiments);
+    }
+
 
 }

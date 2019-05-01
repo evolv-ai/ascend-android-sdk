@@ -4,38 +4,48 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import okhttp3.HttpUrl;
+import java.net.URI;
+import java.net.URL;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class EventEmitter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionQueue.class);
 
     static final String CONFIRM_KEY = "confirmation";
     static final String CONTAMINATE_KEY = "contamination";
 
-    private final HttpParticipantClient client;
+    private final HttpClient httpClient;
     private final AscendConfig config;
-    private final AscendParticipant ascendParticipant;
+    private final AscendParticipant participant;
 
-    EventEmitter(AscendConfig config) {
-        this.client = config.getParticipantClient();
+    EventEmitter(AscendConfig config, AscendParticipant participant) {
+        this.httpClient = config.getHttpClient();
         this.config = config;
-        this.ascendParticipant = config.getAscendParticipant();
+        this.participant = participant;
     }
 
     void emit(String key) {
-        HttpUrl url = getEventUrl(key, 1);
-        client.executeGetRequest(url);
+        String url = getEventUrl(key, 1.0);
+        if (url != null) {
+            httpClient.get(url);
+        }
     }
 
     void emit(String key, Double score) {
-        HttpUrl url = getEventUrl(key, score);
-        client.executeGetRequest(url);
+        String url = getEventUrl(key, score);
+        if (url != null) {
+            httpClient.get(url);
+        }
     }
 
     void confirm(JsonArray allocations) {
         sendAllocationEvents(CONFIRM_KEY, allocations);
     }
 
-    void contaminate(JsonArray allocations) {
+    void contaminate(JsonArray allocations)  {
         sendAllocationEvents(CONTAMINATE_KEY, allocations);
     }
 
@@ -44,38 +54,54 @@ class EventEmitter {
             JsonObject allocation = a.getAsJsonObject();
             String experimentId = allocation.get("eid").getAsString();
             String candidateId = allocation.get("cid").getAsString();
-            HttpUrl url = getEventUrl(key, experimentId, candidateId);
-            client.executeGetRequest(url);
+
+            String url = getEventUrl(key, experimentId, candidateId);
+            if (url != null) {
+                httpClient.get(url);
+            }
         }
     }
 
-    HttpUrl getEventUrl(String type, double score) {
-        return new HttpUrl.Builder()
-                .scheme(config.getHttpScheme())
-                .host(config.getDomain())
-                .addPathSegment(config.getVersion())
-                .addPathSegment(config.getEnvironmentId())
-                .addPathSegment("events")
-                .addQueryParameter("uid", ascendParticipant.getUserId())
-                .addQueryParameter("sid", ascendParticipant.getSessionId())
-                .addQueryParameter("type", type)
-                .addQueryParameter("score", Double.toString(score))
-                .build();
+    String getEventUrl(String type, Double score) {
+        try {
+            String path = String.format("//%s/%s/%s/events", config.getDomain(),
+                    config.getVersion(),
+                    config.getEnvironmentId());
+            String queryString = String.format("uid=%s&sid=%s&type=%s&score=%s",
+                    participant.getUserId(),
+                    participant.getSessionId(), type, score.toString());
+
+            URI uri = new URI(config.getHttpScheme(), null, path, queryString,
+                    null);
+
+            URL url = uri.toURL();
+
+            return url.toString();
+        } catch (Exception e) {
+            LOGGER.error("There was an error while creating the event url.", e);
+            return null;
+        }
     }
 
-    HttpUrl getEventUrl(String type, String experimentId, String candidateId) {
-        return new HttpUrl.Builder()
-                .scheme(config.getHttpScheme())
-                .host(config.getDomain())
-                .addPathSegment(config.getVersion())
-                .addPathSegment(config.getEnvironmentId())
-                .addPathSegment("events")
-                .addQueryParameter("uid", ascendParticipant.getUserId())
-                .addQueryParameter("sid", ascendParticipant.getSessionId())
-                .addQueryParameter("eid", experimentId)
-                .addQueryParameter("cid", candidateId)
-                .addQueryParameter("type", type)
-                .build();
+    String getEventUrl(String type, String experimentId, String candidateId) {
+        try {
+            String path = String.format("//%s/%s/%s/events", config.getDomain(),
+                    config.getVersion(),
+                    config.getEnvironmentId());
+            String queryString = String.format("uid=%s&sid=%s&eid=%s&cid=%s&type=%s",
+                    participant.getUserId(),
+                    participant.getSessionId(), experimentId, candidateId, type);
+
+            URI uri = new URI(config.getHttpScheme(), null, path, queryString,
+                    null);
+
+            URL url = uri.toURL();
+
+            return url.toString();
+        } catch (Exception e) {
+            LOGGER.error("There was an error while creating the event url.", e);
+            return null;
+        }
     }
 
 }
