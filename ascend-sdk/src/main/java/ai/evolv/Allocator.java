@@ -68,7 +68,7 @@ class Allocator {
 
             return url.toString();
         } catch (Exception e) {
-            LOGGER.error("There was an error while creating the allocations url.", e);
+            LOGGER.error("There was an issue creating the allocations url.", e);
             return "";
         }
     }
@@ -113,36 +113,30 @@ class Allocator {
     }
 
     JsonArray resolveAllocationFailure() {
-        JsonArray allocations = store.get(participant.getUserId());
-        if (allocationsNotEmpty(allocations)) {
+        JsonArray previousAllocations = store.get(participant.getUserId());
+        if (allocationsNotEmpty(previousAllocations)) {
             LOGGER.debug("Falling back to participant's previous allocation.");
-
             if (confirmationSandbagged) {
-                eventEmitter.confirm(allocations);
+                eventEmitter.confirm(previousAllocations);
             }
 
             if (contaminationSandbagged) {
-                eventEmitter.contaminate(allocations);
+                eventEmitter.contaminate(previousAllocations);
             }
 
             allocationStatus = AllocationStatus.RETRIEVED;
-            executionQueue.executeAllWithValuesFromAllocations(allocations);
+            executionQueue.executeAllWithValuesFromAllocations(previousAllocations);
         } else {
             LOGGER.debug("Falling back to the supplied defaults.");
-
             allocationStatus = AllocationStatus.FAILED;
             executionQueue.executeAllWithValuesFromDefaults();
-
-            allocations = new JsonArray();
+            previousAllocations = new JsonArray();
         }
 
-        return allocations;
+        return previousAllocations;
     }
 
     static boolean allocationsNotEmpty(JsonArray allocations) {
         return allocations != null && allocations.size() > 0;
     }
-
-
-
 }

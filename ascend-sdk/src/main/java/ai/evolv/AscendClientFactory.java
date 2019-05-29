@@ -13,7 +13,7 @@ public class AscendClientFactory {
     /**
      * Creates instances of the AscendClient.
      *
-     * @param config an instance of AscendConfig
+     * @param config general configurations for the SDK
      * @return an instance of AscendClient
      */
     public static AscendClient init(AscendConfig config) {
@@ -25,8 +25,8 @@ public class AscendClientFactory {
     /**
      * Creates instances of the AscendClient.
      *
-     * @param config an instance of AscendConfig
-     * @param participant an instance of AscendParticipant
+     * @param config general configurations for the SDK
+     * @param participant the participant for the initialized client
      * @return an instance of AscendClient
      */
     public static AscendClient init(AscendConfig config, AscendParticipant participant) {
