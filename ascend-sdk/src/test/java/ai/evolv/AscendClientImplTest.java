@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.*;
 
@@ -73,10 +74,11 @@ public class AscendClientImplTest {
 
     @Test
     public void testGetReturnsDefaultsUponNullFuture() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
 
         AscendClient client = new AscendClientImpl(mockConfig, mockEventEmitter, null, mockAllocator,
                 false, participant);
@@ -87,10 +89,11 @@ public class AscendClientImplTest {
 
     @Test
     public void testGetReturnsDefaultsUponEmptyAllocations() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         JsonArray allocations = new JsonArray();
@@ -106,10 +109,11 @@ public class AscendClientImplTest {
 
     @Test
     public void testGetReturnsDefaultsUponException() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -124,10 +128,11 @@ public class AscendClientImplTest {
 
     @Test
     public void testGetValueSuccess() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -142,10 +147,11 @@ public class AscendClientImplTest {
 
     @Test
     public void testEmitEventWithScore() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -162,10 +168,11 @@ public class AscendClientImplTest {
 
     @Test
     public void testEmitEvent() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -181,11 +188,12 @@ public class AscendClientImplTest {
 
     @Test
     public void testConfirmEventSandBagged() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.FETCHING);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -220,11 +228,12 @@ public class AscendClientImplTest {
 
     @Test
     public void testContaminateEventSandBagged() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.FETCHING);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
 
         SettableFuture<JsonArray> allocationsFuture = SettableFuture.create();
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -239,10 +248,12 @@ public class AscendClientImplTest {
 
     @Test
     public void testContaminateEvent() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
+
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.RETRIEVED);
         when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
@@ -259,10 +270,12 @@ public class AscendClientImplTest {
 
     @Test
     public void testSubscribeNoPreviousAllocationsWithFetchingState() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
+
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.FETCHING);
         when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
@@ -288,10 +301,12 @@ public class AscendClientImplTest {
 
     @Test
     public void testSubscribeNoPreviousAllocationsWithRetrievedState() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
+
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.RETRIEVED);
         when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
@@ -319,10 +334,12 @@ public class AscendClientImplTest {
 
     @Test
     public void testSubscribeNoPreviousAllocationsWithFailedState() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
+
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.FAILED);
         when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
@@ -348,10 +365,12 @@ public class AscendClientImplTest {
 
     @Test
     public void testSubscribeNoPreviousAllocationsWithRetrievedStateThrowsError() {
-        AscendParticipant participant = AscendParticipant.builder().build();
         AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig,
                 mockExecutionQueue, mockHttpClient, mockAllocationStore);
+
+        AscendParticipant participant = AscendParticipant.builder().build();
+
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
         when(mockAllocator.getAllocationStatus()).thenReturn(Allocator.AllocationStatus.RETRIEVED);
         when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);

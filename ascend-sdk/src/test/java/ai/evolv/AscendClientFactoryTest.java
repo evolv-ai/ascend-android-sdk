@@ -1,10 +1,9 @@
 package ai.evolv;
 
-import ai.evolv.utils.MockHttpClient;
-
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -14,6 +13,7 @@ import static org.mockito.Mockito.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import ai.evolv.utils.MockHttpClient;
 
 public class AscendClientFactoryTest {
 
@@ -97,6 +97,6 @@ public class AscendClientFactoryTest {
         AscendClient client = AscendClientFactory.init(mockConfig, participant);
         verify(mockAllocationStore, times(2)).get(participant.getUserId());
         Assert.assertTrue(client instanceof AscendClient);
-        Assert.assertEquals(previousUid, participant.getUserId());
     }
+
 }
