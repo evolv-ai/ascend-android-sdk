@@ -1,4 +1,4 @@
-## [0.6.0-beta] - 2019-05-29
+## [0.6.0-beta] - 2019-05-30
 ### Fixed 
 - Participant's now initialize with the client instead of getting reused like before.
 - Stack traces are now logged upon exceptions.
