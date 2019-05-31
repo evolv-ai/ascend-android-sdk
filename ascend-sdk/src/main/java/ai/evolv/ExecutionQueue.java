@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 class ExecutionQueue {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(ExecutionQueue.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionQueue.class);
 
     private final ConcurrentLinkedQueue<Execution> queue;
 
