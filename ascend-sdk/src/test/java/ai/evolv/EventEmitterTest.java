@@ -98,7 +98,7 @@ public class EventEmitterTest {
 
     @Test
     public void testGetEventUrlWithEidAndCid() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -106,13 +106,12 @@ public class EventEmitterTest {
         AscendParticipant participant = AscendParticipant.builder().build();
         EventEmitter emitter = new EventEmitter(mockConfig, participant);
         String url = emitter.getEventUrl(type, eid, cid);
-        Assert.assertEquals(createAllocationEventUrl(actualConfig,
-                allocations.get(0).getAsJsonObject(), type, participant), url);
+        Assert.assertEquals(createAllocationEventUrl(actualConfig, allocations.get(0).getAsJsonObject(), type, participant), url);
     }
 
     @Test
     public void testSendAllocationEvents() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -122,19 +121,18 @@ public class EventEmitterTest {
         emitter.sendAllocationEvents(type, allocations);
 
         verify(mockHttpClient, times(1))
-                .get(createAllocationEventUrl(actualConfig, allocations.get(0).getAsJsonObject(),
-                        type, participant));
+                .get(createAllocationEventUrl(actualConfig, allocations.get(0).getAsJsonObject(), type, participant));
     }
 
     @Test
     public void testContaminateEvent() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
 
         AscendParticipant participant = AscendParticipant.builder().build();
-        EventEmitter emitter = new EventEmitter(mockConfig, participant);
+        EventEmitter emitter = new EventEmitter(mockConfig,participant);
         emitter.contaminate(allocations);
 
         verify(mockHttpClient, times(1))
@@ -144,7 +142,7 @@ public class EventEmitterTest {
 
     @Test
     public void testConfirmEvent() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -160,7 +158,7 @@ public class EventEmitterTest {
 
     @Test
     public void testGenericEvent() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
@@ -175,7 +173,7 @@ public class EventEmitterTest {
 
     @Test
     public void testGenericEventWithScore() {
-        AscendConfig actualConfig = new AscendConfig.Builder(environmentId, mockHttpClient).build();
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         mockConfig = new AllocatorTest().setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
                 mockHttpClient, mockAllocationStore);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();

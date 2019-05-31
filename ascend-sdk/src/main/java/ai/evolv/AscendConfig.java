@@ -6,6 +6,8 @@ public class AscendConfig {
     static final String DEFAULT_DOMAIN = "participants.evolv.ai";
     static final String DEFAULT_API_VERSION = "v1";
 
+    private static final int DEFAULT_ALLOCATION_STORE_SIZE = 1000;
+
     private final String httpScheme;
     private final String domain;
     private final String version;
@@ -61,10 +63,11 @@ public class AscendConfig {
 
     public static class Builder {
 
+        private int allocationStoreSize = DEFAULT_ALLOCATION_STORE_SIZE;
         private String httpScheme = DEFAULT_HTTP_SCHEME;
         private String domain = DEFAULT_DOMAIN;
         private String version = DEFAULT_API_VERSION;
-        private AscendAllocationStore ascendAllocationStore = new DefaultAllocationStore();
+        private AscendAllocationStore allocationStore;
 
         private String environmentId;
         private HttpClient httpClient;
@@ -83,8 +86,8 @@ public class AscendConfig {
         }
 
         /**
-         * Sets the domain of the underlying participant api.
-         * @param domain the domain of the participant api
+         * Sets the domain of the underlying ascendParticipant api.
+         * @param domain the domain of the ascendParticipant api
          * @return AscendClientBuilder class
          */
         public Builder setDomain(String domain) {
@@ -93,8 +96,8 @@ public class AscendConfig {
         }
 
         /**
-         * Version of the underlying participant api.
-         * @param version representation of the required participant api version
+         * Version of the underlying ascendParticipant api.
+         * @param version representation of the required ascendParticipant api version
          * @return AscendClientBuilder class
          */
         public Builder setVersion(String version) {
@@ -105,11 +108,11 @@ public class AscendConfig {
         /**
          * Sets up a custom AscendAllocationStore. Store needs to implement the
          * AscendAllocationStore interface.
-         * @param ascendAllocationStore a custom built allocation store
+         * @param allocationStore a custom built allocation store
          * @return AscendClientBuilder class
          */
-        public Builder setAscendAllocationStore(AscendAllocationStore ascendAllocationStore) {
-            this.ascendAllocationStore = ascendAllocationStore;
+        public Builder setAscendAllocationStore(AscendAllocationStore allocationStore) {
+            this.allocationStore = allocationStore;
             return this;
         }
 
@@ -124,12 +127,27 @@ public class AscendConfig {
         }
 
         /**
+         * Sets the DefaultAllocationStores size.
+         * @param size number of entries allowed in the default allocation store
+         * @return AscendClientBuilder class
+         */
+        public Builder setDefaultAllocationStoreSize(int size) {
+            this.allocationStoreSize = size;
+            return this;
+        }
+
+        /**
          * Builds an instance of AscendClientImpl.
          * @return an AscendClientImpl instance
          */
         public AscendConfig build() {
-            return new AscendConfig(httpScheme, domain, version,
-                    environmentId, ascendAllocationStore, httpClient);
+            if (allocationStore == null) {
+                allocationStore = new DefaultAllocationStore(allocationStoreSize);
+            }
+
+            return new AscendConfig(httpScheme, domain, version, environmentId,
+                    allocationStore,
+                    httpClient);
         }
 
     }

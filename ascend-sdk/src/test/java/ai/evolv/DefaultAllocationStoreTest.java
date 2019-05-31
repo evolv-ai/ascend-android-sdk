@@ -11,18 +11,18 @@ public class DefaultAllocationStoreTest {
 
     @Test
     public void testEmptyStoreRGetsEmptyJsonArray() {
-        AscendParticipant participant = AscendParticipant.builder().build();
-        AscendAllocationStore store = new DefaultAllocationStore();
-        Assert.assertNull(store.get(participant.getUserId()));
+        AscendAllocationStore store = new DefaultAllocationStore(10);
+        Assert.assertNotNull(store.get("test_user"));
+        Assert.assertEquals(0, store.get("test_user").size());
+        Assert.assertEquals(new JsonArray(), store.get("test_user"));
     }
 
     @Test
     public void testPutAndGetOnStore() {
-        AscendParticipant participant = AscendParticipant.builder().setUserId("test_uid").build();
-        AscendAllocationStore store = new DefaultAllocationStore();
+        AscendAllocationStore store = new DefaultAllocationStore(10);
         JsonArray allocations = new AllocationsTest().parseRawAllocations(rawAllocation);
-        store.put(participant.getUserId(), allocations);
-        JsonArray storedAllocations = store.get(participant.getUserId());
+        store.put("test_user", allocations);
+        JsonArray storedAllocations = store.get("test_user");
         Assert.assertNotNull(storedAllocations);
         Assert.assertNotEquals(new JsonArray(), storedAllocations);
         Assert.assertEquals(allocations, storedAllocations);

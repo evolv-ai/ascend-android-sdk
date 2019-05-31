@@ -83,8 +83,7 @@ public class AllocatorTest {
                 participant.getSessionId());
     }
 
-    static String createConfirmationUrl(AscendConfig config, JsonObject allocation,
-                                        AscendParticipant participant) {
+    static String createConfirmationUrl(AscendConfig config, JsonObject allocation, AscendParticipant participant) {
         return String.format("%s://%s/%s/%s/events?uid=%s&sid=%s&eid=%s&cid=%s&type=%s",
                 config.getHttpScheme(),
                 config.getDomain(),
@@ -97,8 +96,7 @@ public class AllocatorTest {
                 "confirmation");
     }
 
-    static String createContaminationUrl(AscendConfig config, JsonObject allocation,
-                                         AscendParticipant participant) {
+    static String createContaminationUrl(AscendConfig config, JsonObject allocation, AscendParticipant participant) {
         return String.format("%s://%s/%s/%s/events?uid=%s&sid=%s&eid=%s&cid=%s&type=%s",
                 config.getHttpScheme(),
                 config.getDomain(),
@@ -167,8 +165,7 @@ public class AllocatorTest {
         JsonArray actualAllocations = allocator.resolveAllocationFailure();
 
         verify(mockHttpClient, times(1))
-                .get(createConfirmationUrl(actualConfig, allocations.get(0).getAsJsonObject(),
-                        participant));
+                .get(createConfirmationUrl(actualConfig, allocations.get(0).getAsJsonObject(), participant));
         verify(mockExecutionQueue, times(1))
                 .executeAllWithValuesFromAllocations(allocations);
         Assert.assertEquals(Allocator.AllocationStatus.RETRIEVED, allocator.getAllocationStatus());
@@ -189,8 +186,7 @@ public class AllocatorTest {
         JsonArray actualAllocations = allocator.resolveAllocationFailure();
 
         verify(mockHttpClient, times(1))
-                .get(createContaminationUrl(actualConfig, allocations.get(0).getAsJsonObject(),
-                        participant));
+                .get(createContaminationUrl(actualConfig, allocations.get(0).getAsJsonObject(), participant));
         verify(mockExecutionQueue, times(1))
                 .executeAllWithValuesFromAllocations(allocations);
         Assert.assertEquals(Allocator.AllocationStatus.RETRIEVED, allocator.getAllocationStatus());
@@ -220,9 +216,8 @@ public class AllocatorTest {
         SettableFuture<String> allocationsResponseFuture = SettableFuture.create();
         allocationsResponseFuture.set(rawAllocation);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
-        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         AscendParticipant participant = AscendParticipant.builder().build();
-
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         when(mockHttpClient.get(createAllocationsUrl(actualConfig, participant))).thenReturn(allocationsResponseFuture);
         when(mockAllocationStore.get(participant.getUserId())).thenReturn(new JsonArray());
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,
@@ -242,9 +237,8 @@ public class AllocatorTest {
         SettableFuture<String> allocationsResponseFuture = SettableFuture.create();
         allocationsResponseFuture.set(rawAllocation);
         JsonArray allocations = new JsonParser().parse(rawAllocation).getAsJsonArray();
-        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
-
         AscendParticipant participant = AscendParticipant.builder().build();
+        AscendConfig actualConfig = AscendConfig.builder(environmentId, mockHttpClient).build();
         when(mockHttpClient.get(createAllocationsUrl(actualConfig, participant))).thenReturn(allocationsResponseFuture);
         when(mockAllocationStore.get(participant.getUserId())).thenReturn(allocations);
         mockConfig = setUpMockedAscendConfigWithMockedClient(mockConfig, actualConfig, mockExecutionQueue,

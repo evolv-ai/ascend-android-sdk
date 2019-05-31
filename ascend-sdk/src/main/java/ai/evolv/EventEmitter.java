@@ -21,6 +21,8 @@ class EventEmitter {
     private final AscendConfig config;
     private final AscendParticipant participant;
 
+    private final Audience audience = new Audience();
+
     EventEmitter(AscendConfig config, AscendParticipant participant) {
         this.httpClient = config.getHttpClient();
         this.config = config;
@@ -29,16 +31,12 @@ class EventEmitter {
 
     void emit(String key) {
         String url = getEventUrl(key, 1.0);
-        if (url != null) {
-            httpClient.get(url);
-        }
+        makeEventRequest(url);
     }
 
     void emit(String key, Double score) {
         String url = getEventUrl(key, score);
-        if (url != null) {
-            httpClient.get(url);
-        }
+        makeEventRequest(url);
     }
 
     void confirm(JsonArray allocations) {
@@ -51,14 +49,16 @@ class EventEmitter {
 
     void sendAllocationEvents(String key, JsonArray allocations) {
         for (JsonElement a : allocations) {
-            JsonObject allocation = a.getAsJsonObject();
-            String experimentId = allocation.get("eid").getAsString();
-            String candidateId = allocation.get("cid").getAsString();
+            if (!audience.filter(participant.getUserAttributes(), a.getAsJsonObject())) {
+                JsonObject allocation = a.getAsJsonObject();
+                String experimentId = allocation.get("eid").getAsString();
+                String candidateId = allocation.get("cid").getAsString();
 
-            String url = getEventUrl(key, experimentId, candidateId);
-            if (url != null) {
-                httpClient.get(url);
+                String url = getEventUrl(key, experimentId, candidateId);
+                makeEventRequest(url);
+                continue;
             }
+            LOGGER.debug(String.format("%s event filtered.", key));
         }
     }
 
@@ -78,7 +78,7 @@ class EventEmitter {
 
             return url.toString();
         } catch (Exception e) {
-            LOGGER.error("There was an error while creating the event url.", e);
+            LOGGER.error("There was an error while creating the events url.", e);
             return null;
         }
     }
@@ -99,8 +99,21 @@ class EventEmitter {
 
             return url.toString();
         } catch (Exception e) {
-            LOGGER.error("There was an error while creating the event url.", e);
+            LOGGER.error("There was an error while creating the events url.", e);
             return null;
+        }
+    }
+
+    private void makeEventRequest(String url) {
+        if (url != null) {
+            try {
+                httpClient.get(url);
+            } catch (Exception e) {
+                LOGGER.error(String.format("There was an exception while making" +
+                        " an event request with %s", url), e);
+            }
+        } else {
+            LOGGER.debug("The event url was null, skipping event request.");
         }
     }
 

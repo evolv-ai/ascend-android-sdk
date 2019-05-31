@@ -45,7 +45,7 @@ public class AscendConfigTest {
         long timeout = 1;
         String domain = "test.evolv.ai";
         String version = "test";
-        AscendAllocationStore allocationStore = new DefaultAllocationStore();
+        AscendAllocationStore allocationStore = new DefaultAllocationStore(10);
         String httpScheme = "test";
 
         AscendConfig config = AscendConfig.builder(ENVIRONMENT_ID, mockHttpClient)

@@ -16,7 +16,7 @@ For a complete example of how to use this SDK see our [example app](https://gith
         <dependency>
           <groupId>ai.evolv</groupId>
           <artifactId>ascend-android-sdk</artifactId>
-          <version>0.5.0</version>
+          <version>0.6.0</version>
         </dependency>
     ```
 

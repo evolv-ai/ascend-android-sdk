@@ -20,15 +20,16 @@ class AscendClientImpl implements AscendClient {
     private final boolean previousAllocations;
     private final AscendParticipant participant;
 
-    AscendClientImpl(AscendConfig config, EventEmitter emitter,
-                     ListenableFuture<JsonArray> allocations,
+    AscendClientImpl(AscendConfig config,
+                     EventEmitter emitter,
+                     ListenableFuture<JsonArray> futureAllocations,
                      Allocator allocator,
                      boolean previousAllocations,
                      AscendParticipant participant) {
         this.store = config.getAscendAllocationStore();
         this.executionQueue = config.getExecutionQueue();
         this.eventEmitter = emitter;
-        this.futureAllocations = allocations;
+        this.futureAllocations = futureAllocations;
         this.allocator = allocator;
         this.previousAllocations = previousAllocations;
         this.participant = participant;
@@ -48,9 +49,20 @@ class AscendClientImpl implements AscendClient {
             }
 
             GenericClass<T> cls = new GenericClass(defaultValue.getClass());
-            return new Allocations(allocations).getValueFromGenome(key, cls.getMyType());
+            T value = new Allocations(allocations).getValueFromAllocations(key, cls.getMyType(),
+                    participant);
+
+            if (value == null) {
+                throw new AscendKeyError("Got null when retrieving key from allocations.");
+            }
+
+            return value;
+        } catch (AscendKeyError e) {
+            LOGGER.debug("Unable to retrieve the treatment. Returning " +
+                    "the default.", e);
+            return defaultValue;
         } catch (Exception e) {
-            LOGGER.error("There was as error retrieving the requested value. Returning " +
+            LOGGER.error("An error occurred while retrieving the treatment. Returning " +
                     "the default.", e);
             return defaultValue;
         }
@@ -58,18 +70,17 @@ class AscendClientImpl implements AscendClient {
 
     @Override
     public <T> void subscribe(String key, T defaultValue, AscendAction<T> function) {
-        Execution execution = new Execution<>(key, defaultValue, function);
+        Execution execution = new Execution<>(key, defaultValue, function, participant);
         if (previousAllocations) {
             try {
                 JsonArray allocations = store.get(participant.getUserId());
                 execution.executeWithAllocation(allocations);
             } catch (AscendKeyError e) {
-                LOGGER.warn(String.format("There was an error retrieving the value of %s from the allocation.",
-                        execution.getKey()), e);
+                LOGGER.debug("Unable to retrieve the value of %s from the allocation.",
+                        execution.getKey());
                 execution.executeWithDefault();
             } catch (Exception e) {
-                LOGGER.error("There was an issue while performing one of" +
-                        " the stored actions.", e);
+                LOGGER.error("There was an error when applying the stored treatment.", e);
             }
         }
 
@@ -83,21 +94,14 @@ class AscendClientImpl implements AscendClient {
                 execution.executeWithAllocation(allocations);
                 return;
             } catch (AscendKeyError e) {
-                LOGGER.warn(String.format("There was an error retrieving the value of %s from the allocation.",
-                        execution.getKey()), e);
+                LOGGER.debug(String.format("Unable to retrieve" +
+                        " the value of %s from the allocation.",  execution.getKey()), e);
             } catch (Exception e) {
-                LOGGER.error("There was an issue while performing one of" +
-                        " the stored actions.", e);
-                return;
+                LOGGER.error("There was an error applying the subscribed method.", e);
             }
         }
 
-        try {
-            execution.executeWithDefault();
-        } catch (Exception e) {
-            LOGGER.error("There was an issue while performing one of" +
-                    " the stored actions.", e);
-        }
+        execution.executeWithDefault();
     }
 
     @Override
