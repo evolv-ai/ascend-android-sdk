@@ -107,7 +107,7 @@ custom allocation store to the client when you build the AscendConfig.
        AscendConfig config = AscendConfig.Builder(<environment_id>)
            .setAscendAllocationStore(<custom_store>)
            .build();
-       AscendClient client = AscendClient.init(config);
+       AscendClient client = AscendClientFactory.init(config);
    ```
 
    
