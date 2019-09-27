@@ -44,7 +44,7 @@ public class AscendClientFactory {
         ListenableFuture<JsonArray> futureAllocations = allocator.fetchAllocations();
 
         return new AscendClientImpl(config,
-                new EventEmitter(config, participant),
+                new EventEmitter(config, participant, store),
                 futureAllocations,
                 allocator,
                 Allocator.allocationsNotEmpty(previousAllocations),

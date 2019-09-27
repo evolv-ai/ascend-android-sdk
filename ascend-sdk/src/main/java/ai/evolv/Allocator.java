@@ -40,7 +40,7 @@ class Allocator {
         this.participant = participant;
         this.httpClient = config.getHttpClient();
         this.allocationStatus = AllocationStatus.FETCHING;
-        this.eventEmitter = new EventEmitter(config, participant);
+        this.eventEmitter = new EventEmitter(config, participant, this.store);
 
     }
 
