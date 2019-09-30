@@ -92,16 +92,9 @@ class Allocator {
                     store.put(participant.getUserId(), allocations);
                     allocationStatus = AllocationStatus.RETRIEVED;
 
-                    if (confirmationSandbagged) {
-                        eventEmitter.confirm(allocations);
-                    }
-
-                    if (contaminationSandbagged) {
-                        eventEmitter.contaminate(allocations);
-                    }
-
                     allocationsFuture.set(allocations);
-                    executionQueue.executeAllWithValuesFromAllocations(allocations);
+                    executionQueue.executeAllWithValuesFromAllocations(allocations,
+                            eventEmitter, confirmationSandbagged, contaminationSandbagged);
                 } catch (Exception e) {
                     LOGGER.warn("There was a failure while retrieving the allocations.", e);
                     allocationsFuture.set(resolveAllocationFailure());
@@ -116,16 +109,10 @@ class Allocator {
         JsonArray previousAllocations = store.get(participant.getUserId());
         if (allocationsNotEmpty(previousAllocations)) {
             LOGGER.debug("Falling back to participant's previous allocation.");
-            if (confirmationSandbagged) {
-                eventEmitter.confirm(previousAllocations);
-            }
-
-            if (contaminationSandbagged) {
-                eventEmitter.contaminate(previousAllocations);
-            }
-
             allocationStatus = AllocationStatus.RETRIEVED;
-            executionQueue.executeAllWithValuesFromAllocations(previousAllocations);
+
+            executionQueue.executeAllWithValuesFromAllocations(previousAllocations, eventEmitter,
+                    confirmationSandbagged, contaminationSandbagged);
         } else {
             LOGGER.debug("Falling back to the supplied defaults.");
             allocationStatus = AllocationStatus.FAILED;

@@ -48,13 +48,15 @@ class Allocations {
                     JsonElement element = getElementFromGenome(allocation.get("genome"), keyParts);
                     T value = new Gson().fromJson(element, cls);
                     if (value != null) {
+                        LOGGER.debug(String.format("Found value for key '%s' in experiment %s",
+                                key, allocation.get("eid").getAsString()));
                         markTouched(allocation);
                         store.put(participant.getUserId(), allocations);
                     }
                     return value;
                 } catch (AscendKeyError e) {
-                    LOGGER.debug(String.format("Unable to find key %s in experiment %s.",
-                            keyParts.toString(), allocation.get("eid").getAsString()), e);
+                    LOGGER.debug(String.format("Unable to find key '%s' in experiment %s.",
+                            key, allocation.get("eid").getAsString()));
                     continue;
                 }
             }

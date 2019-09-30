@@ -68,7 +68,8 @@ class EventEmitter {
 
                 continue;
             }
-            LOGGER.debug(String.format("%s event filtered.", key));
+            LOGGER.debug(String.format("%s event filtered for experiment %s.", key,
+                    allocation.get("eid").getAsString()));
         }
 
         store.put(this.participant.getUserId(), allocations);
