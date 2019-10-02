@@ -1,4 +1,4 @@
-## [0.6.1-beta] - 2019-09-30
+## [0.6.1-beta] - 2019-10-02
 ### Added
 - confirmations/contaminations are now only sent when the allocation is used
 - improved logging messages

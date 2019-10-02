@@ -38,8 +38,7 @@ For a complete example of how to use this SDK see our [example app](https://gith
     ```java
        client.confirm();
     ```
-    *Note: After the client has initialized, it is important to confirm the participant into the experiment. This action
-     records the participant's allocation and sends the info back to Ascend.*
+    *Note: This action records the participant's allocation and sends the info back to Ascend.*
 
 ### Value Retrieval
 
